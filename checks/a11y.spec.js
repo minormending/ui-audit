@@ -6,7 +6,7 @@ import { cases, visit } from './_harness.js';
 // missing labels, heading order, ARIA misuse.
 for (const c of cases) {
   test(`a11y: ${c.id}`, async ({ page }, testInfo) => {
-    await visit(page, c.url, c.waitFor, c.freezeTimers);
+    await visit(page, c.url, c.waitFor);
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])

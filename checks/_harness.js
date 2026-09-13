@@ -41,7 +41,7 @@ export const githubUser = config.githubUser;
  * console errors and failed requests that happened along the way.
  * Returns the collected problems so individual checks can assert on them.
  */
-export async function visit(page, url, waitFor = null, freezeTimers = true) {
+export async function visit(page, url, waitFor = null) {
   const consoleErrors = [];
   const failedRequests = [];
 
@@ -81,13 +81,13 @@ export async function visit(page, url, waitFor = null, freezeTimers = true) {
 
   await page.goto(url, { waitUntil: 'load' });
   if (waitFor) await page.waitForSelector(waitFor, { state: 'visible' });
-  await settle(page, freezeTimers);
+  await settle(page);
 
   return { consoleErrors, failedRequests };
 }
 
 /** Kill animation/transition motion and wait for fonts + lazy images. */
-export async function settle(page, freezeTimers = true) {
+export async function settle(page) {
   await page.addStyleTag({
     content: `*, *::before, *::after {
       animation-duration: 0s !important;
@@ -108,20 +108,28 @@ export async function settle(page, freezeTimers = true) {
   // One rAF pair to let any post-font reflow land.
   await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 
-  // Zeroing CSS animation doesn't stop setTimeout/setInterval loops that mutate
-  // the DOM — behaviour-garden beats a face on a timer, so the screenshot caught
-  // it mid-blink at random. Startup has already run by now (load fired and any
-  // waitFor resolved), so cancelling what's still pending only stops idle motion.
-  if (freezeTimers) {
-    await page.evaluate(() => {
-      const highest = setTimeout(() => {}, 0);
-      for (let id = 0; id <= highest; id++) {
-        clearTimeout(id);
-        clearInterval(id);
-      }
-      window.setTimeout = () => 0;
-      window.setInterval = () => 0;
-    });
-    await page.evaluate(() => new Promise(r => requestAnimationFrame(r)));
-  }
+}
+
+/**
+ * Stop timer-driven idle motion so a screenshot is reproducible. Zeroing CSS
+ * animation doesn't cover this — behaviour-garden beats a plant's face on a
+ * setTimeout loop, so its screenshot caught a different frame each run.
+ *
+ * Only the visual check calls this. Stubbing setTimeout globally breaks
+ * axe-core, which drives its rule queue through it, so a11y must run against a
+ * page whose timers still work.
+ */
+export async function freezeMotion(page) {
+  await page.evaluate(() => {
+    const highest = setTimeout(() => {}, 0);
+    for (let id = 0; id <= highest; id++) {
+      clearTimeout(id);
+      clearInterval(id);
+    }
+    // Callbacks already mid-flight reschedule themselves, so new timers have to
+    // be refused too — not just the pending ones cancelled.
+    window.setTimeout = () => 0;
+    window.setInterval = () => 0;
+  });
+  await page.evaluate(() => new Promise(r => requestAnimationFrame(r)));
 }

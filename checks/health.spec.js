@@ -5,7 +5,7 @@ import { cases, visit } from './_harness.js';
 // 404, and does the document have the metadata a real site needs.
 for (const c of cases) {
   test(`health: ${c.id}`, async ({ page }) => {
-    const { consoleErrors, failedRequests } = await visit(page, c.url, c.waitFor, c.freezeTimers);
+    const { consoleErrors, failedRequests } = await visit(page, c.url, c.waitFor);
 
     expect(failedRequests, 'requests that failed or 404ed').toEqual([]);
     expect(consoleErrors, 'console errors').toEqual([]);
