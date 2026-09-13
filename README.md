@@ -111,22 +111,36 @@ gh workflow run baselines.yml -f only=tidy-up  # one
 Bump the `@playwright/test` pin and both workflows' container image tag
 together, or font rendering drifts and every visual check fails.
 
-## Design review (optional, costs API credits)
+## Design review (driven by a Claude session)
 
-`npm run review` screenshots each page and asks Claude to critique it against a
-design rubric — spacing, alignment, hierarchy, contrast, affordance. This is the
-judgement call the other four checks can't make.
+The four automated checks can't judge whether a page *looks right* — only
+whether it changed or broke a measurable rule. That judgement is left to a
+Claude Code session: the harness captures screenshots, the session reads them.
+No API key, no credits.
 
 ```bash
-export ANTHROPIC_API_KEY=...
-npm run serve &          # the reviewer expects the static server up
-npm run review           # all targets
-npm run review nail-salon
+node scripts/serve.js &
+npm run capture              # all targets -> design-review/shots/
+npm run capture nail-salon   # one target
 ```
 
-Writes `design-review/report.md` and exits non-zero if any page is rated
-`needs-work`. Uses `claude-opus-5` with adaptive thinking.
+Then ask a session in this repo to `/design-review`, or just point it at the
+PNGs. The skill in `.claude/skills/design-review/` tells it what to look for
+and what to leave to the automated suite.
 
-> Unverified end-to-end: built and syntax-checked, and the screenshot/report
-> path is exercised, but the API call itself has not been run — no credentials
-> were available on the machine it was built on.
+To review a project that isn't in `targets.json` — a session working in some
+other repo wanting its own UI reviewed — skip the registry entirely:
+
+```bash
+AUDIT_DIR=/abs/path/to/project node scripts/serve.js &
+AUDIT_DIR=/abs/path/to/project npm run capture
+AUDIT_DIR=/abs/path/to/project npx playwright test layout.spec.js a11y.spec.js health.spec.js
+```
+
+`AUDIT_WAIT_FOR` handles client-rendered apps, `AUDIT_NAME` overrides the mount
+name. The visual check needs a committed baseline, so skip it for ad-hoc runs.
+
+It works: reviewing nail-salon and grumpy-bunny this way found decorative emoji
+landing on top of the title and subtitle, and an illustration overlapping a
+button's label — none of which the automated suite can see, and all of which
+those two projects otherwise pass clean.

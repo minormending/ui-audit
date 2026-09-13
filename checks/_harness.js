@@ -1,16 +1,29 @@
 import { readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(import.meta.url), '../..');
 const config = JSON.parse(await readFile(join(root, 'targets.json'), 'utf8'));
 
-// AUDIT_ONLY=name[,name] narrows the run — how a single project's CI audits
-// just itself using the shared harness.
-const only = process.env.AUDIT_ONLY?.split(',').map(s => s.trim()).filter(Boolean);
-const selected = only?.length ? config.targets.filter(t => only.includes(t.name)) : config.targets;
+// AUDIT_DIR=/abs/path audits a project that isn't in the registry at all, so a
+// session working in some other repo can point this harness at it directly.
+const adhoc = process.env.AUDIT_DIR
+  ? [{
+      name: process.env.AUDIT_NAME || basename(resolve(process.env.AUDIT_DIR)),
+      dir: resolve(process.env.AUDIT_DIR),
+      waitFor: process.env.AUDIT_WAIT_FOR || null,
+      pages: [{ path: '/', name: 'home' }],
+    }]
+  : null;
 
-if (only?.length && !selected.length) {
+// AUDIT_ONLY=name[,name] narrows a registry run — how a single project's CI
+// audits just itself using the shared harness.
+const only = process.env.AUDIT_ONLY?.split(',').map(s => s.trim()).filter(Boolean);
+const selected = adhoc
+  ? adhoc
+  : only?.length ? config.targets.filter(t => only.includes(t.name)) : config.targets;
+
+if (!adhoc && only?.length && !selected.length) {
   throw new Error(`AUDIT_ONLY matched no targets. Known: ${config.targets.map(t => t.name).join(', ')}`);
 }
 

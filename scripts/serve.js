@@ -3,10 +3,9 @@
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, extname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolveTargets, root } from './targets.js';
 
-const root = resolve(fileURLToPath(import.meta.url), '../..');
-const { targets } = JSON.parse(await readFile(join(root, 'targets.json'), 'utf8'));
+const targets = await resolveTargets(process.argv.slice(2));
 const mounts = new Map(targets.map(t => [t.name, resolve(root, t.dir)]));
 
 const MIME = {
@@ -50,4 +49,7 @@ function send(res, code, msg) {
   res.end(msg);
 }
 
-server.listen(4173, () => console.log('ui-audit static server on http://localhost:4173'));
+server.listen(4173, () => {
+  console.log('ui-audit static server on http://localhost:4173');
+  for (const name of mounts.keys()) console.log(`  /${name}/`);
+});

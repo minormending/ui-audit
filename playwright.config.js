@@ -1,4 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
+import { resolveTargets } from './scripts/targets.js';
+
+// The readiness probe has to hit a path this run actually mounts — with
+// AUDIT_DIR the registry targets aren't served at all.
+const firstTarget = (await resolveTargets())[0]?.name ?? 'grumpy-bunny';
 
 // AUDIT_URL lets the same suite run against a deployed Pages site instead of
 // the local mounts, e.g. AUDIT_URL=https://minormending.github.io
@@ -43,8 +48,11 @@ export default defineConfig({
 
   webServer: isRemote ? undefined : {
     command: 'node scripts/serve.js',
-    url: 'http://localhost:4173/grumpy-bunny/',
-    reuseExistingServer: !process.env.CI,
+    url: `http://localhost:4173/${firstTarget}/`,
+    // Never reuse: a server left running from an AUDIT_DIR run serves only that
+    // mount, and reusing it silently 404s every registry target instead of
+    // failing. Better to refuse to start than to audit the wrong thing.
+    reuseExistingServer: false,
     timeout: 20_000,
   },
 });
