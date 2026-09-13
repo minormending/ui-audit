@@ -2,16 +2,16 @@
   "githubUser": "minormending",
   "_note": "dir is what gets served. Vite projects point at dist/ and need a build first.",
   "targets": [
-    { "name": "grumpy-bunny",     "dir": "../grumpy-bunny",     "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "learn-letters",    "dir": "../learn-letters",    "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "tidy-up",          "dir": "../tidy-up",          "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "nail-salon",       "dir": "../nail-salon",       "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "crest-cards",      "dir": "../crest-cards",      "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "behaviour-garden", "dir": "../behaviour-garden", "pages": [{ "path": "/", "name": "home" }, { "path": "/art.html", "name": "art" }] },
-    { "name": "crawler",          "dir": "../crawler",          "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "grumpy-bunny",     "dir": "../grumpy-bunny", "repo": "grumpy-bunny",     "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "learn-letters",    "dir": "../learn-letters", "repo": "learn-letters",    "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "tidy-up",          "dir": "../tidy-up", "repo": "tidy-up",          "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "nail-salon",       "dir": "../nail-salon", "repo": "nail-salon",       "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "crest-cards",      "dir": "../crest-cards", "repo": "crest-cards",      "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "behaviour-garden", "dir": "../behaviour-garden", "repo": "behaviour-garden", "pages": [{ "path": "/", "name": "home" }, { "path": "/art.html", "name": "art" }] },
+    { "name": "crawler",          "dir": "../crawler", "repo": "deepdelve",          "pages": [{ "path": "/", "name": "home" }] },
 
-    { "name": "nyc-lyfe",     "dir": "../nyc-lyfe/dist",     "build": "VITE_BASE_PATH=/nyc-lyfe/ npm run build", "waitFor": "#screen-title", "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "restroom-map", "dir": "../restroom-map/dist", "build": "npm run build", "waitFor": "#root > *", "ignore": [".maplibregl-ctrl-attrib"], "mask": [".maplibregl-canvas"], "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "calcuken",     "dir": "../calcuken/dist",     "build": "npm run build", "waitFor": "#root > *", "pages": [{ "path": "/", "name": "home" }] }
+    { "name": "nyc-lyfe",     "dir": "../nyc-lyfe/dist", "repo": "nyc-lyfe",     "build": "VITE_BASE_PATH=/nyc-lyfe/ npm run build", "waitFor": "#screen-title", "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "npm run build", "waitFor": "#root > *", "ignore": [".maplibregl-ctrl-attrib"], "mask": [".maplibregl-canvas"], "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "calcuken",     "dir": "../calcuken/dist", "repo": "calcuken",     "build": "VITE_BASE_PATH=/calcuken/ npm run build", "waitFor": "#root > *", "pages": [{ "path": "/", "name": "home" }] }
   ]
 }

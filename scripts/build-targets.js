@@ -2,6 +2,7 @@
 // with the same base path GitHub Pages will serve from. Run before `npm test`.
 import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,6 +23,10 @@ for (const t of buildable) {
   const cwd = dirname(resolve(root, t.dir));
   console.log(`\n=== building ${t.name} (${t.build})`);
   try {
+    // Fresh CI checkouts have no node_modules; locally this is already done.
+    if (!existsSync(join(cwd, 'node_modules'))) {
+      execSync('npm install --no-audit --no-fund', { cwd, stdio: 'inherit' });
+    }
     execSync(t.build, { cwd, stdio: 'inherit' });
   } catch {
     console.error(`!!! ${t.name} failed to build`);
