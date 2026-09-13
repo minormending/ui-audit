@@ -130,6 +130,17 @@ export async function freezeMotion(page) {
     // be refused too — not just the pending ones cancelled.
     window.setTimeout = () => 0;
     window.setInterval = () => 0;
+
+    // Lottie drives playback from requestAnimationFrame, so neither the CSS
+    // override nor the timer freeze touches it — behaviour-garden's plants kept
+    // animating and every screenshot caught a different frame. freeze() halts
+    // lottie's global loop, including animations mounted after this point.
+    if (window.lottie) {
+      window.lottie.freeze();
+      for (const anim of window.lottie.getRegisteredAnimations?.() ?? []) {
+        anim.goToAndStop(0, true);
+      }
+    }
   });
   await page.evaluate(() => new Promise(r => requestAnimationFrame(r)));
 }
