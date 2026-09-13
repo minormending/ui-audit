@@ -22,6 +22,13 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
     env:
       AUDIT_ONLY: ${{ github.event.inputs.only }}
+      # Targets that talk to a backend are built against it, so the baselines
+      # pin the state a visitor actually sees rather than an unconfigured
+      # fallback. Variables, not secrets: a publishable key is designed to be
+      # public and is compiled into the bundle regardless. Absent on a fork,
+      # these resolve to empty and the target falls back to its sample data.
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
