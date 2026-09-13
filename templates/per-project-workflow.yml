@@ -29,10 +29,18 @@ jobs:
         working-directory: ui-audit
         run: npm ci
 
-      # The harness expects targets as siblings of its own directory.
+      # The harness expects targets as siblings of its own directory, under the
+      # target's name — which isn't always the repo name (deepdelve is audited
+      # as "crawler"), so resolve it through the registry.
       - name: Position project as a sibling target
         run: |
-          TARGET="${GITHUB_REPOSITORY##*/}"
+          TARGET=$(node -e '
+            const {targets} = require("./ui-audit/targets.json");
+            const repo = process.env.GITHUB_REPOSITORY.split("/")[1];
+            const hit = targets.find(t => t.repo === repo || t.name === repo);
+            if (!hit) { console.error(`${repo} is not in targets.json`); process.exit(1); }
+            console.log(hit.name);
+          ')
           rm -rf "$TARGET" && mv project "$TARGET"
           echo "AUDIT_ONLY=$TARGET" >> "$GITHUB_ENV"
 
