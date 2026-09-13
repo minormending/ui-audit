@@ -5,7 +5,7 @@ import { cases, visit } from './_harness.js';
 // layout and a11y checks, which catch wrongness without a baseline.
 for (const c of cases) {
   test(`visual: ${c.id}`, async ({ page }) => {
-    await visit(page, c.url, c.waitFor);
+    await visit(page, c.url, c.waitFor, c.freezeTimers);
     // Playwright already suffixes the project and platform onto the filename.
     await expect(page).toHaveScreenshot(`${c.target}--${c.page}.png`, {
       fullPage: true,

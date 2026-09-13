@@ -29,6 +29,8 @@ export const cases = selected.flatMap(t =>
     // Regions painted over before screenshot comparison — map tiles, embeds,
     // anything whose pixels come from the network and will never match twice.
     mask: [...(t.mask ?? []), ...(p.mask ?? [])],
+    // Opt out where an app needs timers to keep running to reach a stable view.
+    freezeTimers: p.freezeTimers ?? t.freezeTimers ?? true,
   }))
 );
 
@@ -39,7 +41,7 @@ export const githubUser = config.githubUser;
  * console errors and failed requests that happened along the way.
  * Returns the collected problems so individual checks can assert on them.
  */
-export async function visit(page, url, waitFor = null) {
+export async function visit(page, url, waitFor = null, freezeTimers = true) {
   const consoleErrors = [];
   const failedRequests = [];
 
@@ -79,13 +81,13 @@ export async function visit(page, url, waitFor = null) {
 
   await page.goto(url, { waitUntil: 'load' });
   if (waitFor) await page.waitForSelector(waitFor, { state: 'visible' });
-  await settle(page);
+  await settle(page, freezeTimers);
 
   return { consoleErrors, failedRequests };
 }
 
 /** Kill animation/transition motion and wait for fonts + lazy images. */
-export async function settle(page) {
+export async function settle(page, freezeTimers = true) {
   await page.addStyleTag({
     content: `*, *::before, *::after {
       animation-duration: 0s !important;
@@ -105,4 +107,21 @@ export async function settle(page) {
   });
   // One rAF pair to let any post-font reflow land.
   await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+
+  // Zeroing CSS animation doesn't stop setTimeout/setInterval loops that mutate
+  // the DOM — behaviour-garden beats a face on a timer, so the screenshot caught
+  // it mid-blink at random. Startup has already run by now (load fired and any
+  // waitFor resolved), so cancelling what's still pending only stops idle motion.
+  if (freezeTimers) {
+    await page.evaluate(() => {
+      const highest = setTimeout(() => {}, 0);
+      for (let id = 0; id <= highest; id++) {
+        clearTimeout(id);
+        clearInterval(id);
+      }
+      window.setTimeout = () => 0;
+      window.setInterval = () => 0;
+    });
+    await page.evaluate(() => new Promise(r => requestAnimationFrame(r)));
+  }
 }

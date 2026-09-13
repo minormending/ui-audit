@@ -4,7 +4,7 @@ import { cases, visit } from './_harness.js';
 // Design defects that are objectively wrong at any viewport — no baseline needed.
 for (const c of cases) {
   test(`layout: ${c.id}`, async ({ page }, testInfo) => {
-    await visit(page, c.url, c.waitFor);
+    await visit(page, c.url, c.waitFor, c.freezeTimers);
 
     const report = await page.evaluate(ignore => {
       const ignored = el => ignore.some(sel => el.closest(sel));
