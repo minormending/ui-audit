@@ -1,0 +1,53 @@
+# Template — copy into each project repo as .github/workflows/ui-audit.yml.
+# Audits that one project against the shared harness on every PR.
+name: UI audit
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    # Same image the baselines are generated in, so font rendering matches.
+    # Bump this tag and the harness's @playwright/test pin together.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    steps:
+      - name: Check out this project
+        uses: actions/checkout@v4
+        with:
+          path: project
+
+      - name: Check out the audit harness
+        uses: actions/checkout@v4
+        with:
+          repository: minormending/ui-audit
+          path: ui-audit
+
+      - name: Install harness deps
+        working-directory: ui-audit
+        run: npm ci
+
+      # The harness expects targets as siblings of its own directory.
+      - name: Position project as a sibling target
+        run: |
+          TARGET="${GITHUB_REPOSITORY##*/}"
+          rm -rf "$TARGET" && mv project "$TARGET"
+          echo "AUDIT_ONLY=$TARGET" >> "$GITHUB_ENV"
+
+      - name: Build target if it needs one
+        working-directory: ui-audit
+        run: node scripts/build-targets.js "$AUDIT_ONLY"
+
+      - name: Run audit
+        working-directory: ui-audit
+        run: npx playwright test
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-audit-report
+          path: ui-audit/playwright-report
+          retention-days: 14

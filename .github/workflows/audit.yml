@@ -1,0 +1,51 @@
+name: Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Targets live in other repos, so a change there won't trigger this.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Comma-separated target names (blank = all)'
+        required: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    # Baselines are generated in this same image; font rendering must match.
+    # Bump this tag and the @playwright/test pin together.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+    env:
+      AUDIT_ONLY: ${{ github.event.inputs.only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ui-audit
+
+      - name: Install harness
+        working-directory: ui-audit
+        run: npm ci
+
+      - name: Clone targets
+        working-directory: ui-audit
+        run: node scripts/fetch-targets.js
+
+      - name: Build Vite targets
+        working-directory: ui-audit
+        run: node scripts/build-targets.js
+
+      - name: Run audit
+        working-directory: ui-audit
+        run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-report
+          path: ui-audit/playwright-report
+          retention-days: 14
