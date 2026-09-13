@@ -68,6 +68,10 @@ A flaky visual suite gets ignored, so the harness pins everything that varies:
 
 - `Math.random` is seeded and `Date` frozen to 2026-01-01 before page load —
   several of these apps generate content procedurally.
+- Pending `setTimeout`/`setInterval` are cancelled once the page has settled.
+  Zeroing CSS animation doesn't stop timer-driven DOM mutation, and an idle
+  animation caught mid-frame is a screenshot that never matches twice. Opt out
+  per target with `"freezeTimers": false`.
 - Service workers are blocked, so a stale precache can't serve old assets.
 - Animations and transitions are zeroed; fonts and images are awaited.
 - Network-painted regions (map tiles) are masked per target.
