@@ -11,7 +11,7 @@
     { "name": "crawler",          "dir": "../crawler", "repo": "deepdelve",          "pages": [{ "path": "/", "name": "home" }] },
 
     { "name": "nyc-lyfe",     "dir": "../nyc-lyfe/dist", "repo": "nyc-lyfe",     "build": "VITE_BASE_PATH=/nyc-lyfe/ npm run build", "waitFor": "#screen-title", "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "npm run build", "waitFor": "#root > *", "ignore": [".maplibregl-ctrl-attrib", ".sr-only", "p a"], "mask": [".maplibregl-canvas"], "pages": [{ "path": "/", "name": "home" }, { "path": "/privacy.html", "name": "privacy", "waitFor": "h1" }, { "path": "/terms.html", "name": "terms", "waitFor": "h1" }] },
+    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "npm run build", "waitFor": "#root > *", "ignore": [".maplibregl-ctrl-attrib", ".sr-only", "p a"], "hide": [".maplibregl-canvas", ".banner-count"], "pages": [{ "path": "/", "name": "home" }, { "path": "/privacy.html", "name": "privacy", "waitFor": "h1" }, { "path": "/terms.html", "name": "terms", "waitFor": "h1" }] },
     { "name": "calcuken",     "dir": "../calcuken/dist", "repo": "calcuken",     "build": "VITE_BASE_PATH=/calcuken/ npm run build", "waitFor": "#root > *", "pages": [{ "path": "/", "name": "home" }] }
   ]
 }

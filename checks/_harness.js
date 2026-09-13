@@ -42,6 +42,12 @@ export const cases = selected.flatMap(t =>
     // Regions painted over before screenshot comparison — map tiles, embeds,
     // anything whose pixels come from the network and will never match twice.
     mask: [...(t.mask ?? []), ...(p.mask ?? [])],
+    // Like mask, but for elements that COVER the viewport. Playwright paints a
+    // mask over the element's bounding box, so masking a full-screen canvas
+    // hides the entire page and the screenshot compares one flat rectangle to
+    // another — a test that cannot fail. visibility:hidden stops it painting
+    // without occluding the UI layered on top of it.
+    hide: [...(t.hide ?? []), ...(p.hide ?? [])],
     // Opt out where an app needs timers to keep running to reach a stable view.
     freezeTimers: p.freezeTimers ?? t.freezeTimers ?? true,
   }))
@@ -97,6 +103,14 @@ export async function visit(page, url, waitFor = null) {
   await settle(page);
 
   return { consoleErrors, failedRequests };
+}
+
+/** Stop an element painting without removing it from layout. */
+export async function hideRegions(page, selectors) {
+  if (!selectors?.length) return;
+  await page.addStyleTag({
+    content: selectors.map(s => `${s} { visibility: hidden !important; }`).join('\n'),
+  });
 }
 
 /** Kill animation/transition motion and wait for fonts + lazy images. */
