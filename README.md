@@ -68,15 +68,19 @@ A flaky visual suite gets ignored, so the harness pins everything that varies:
 
 - `Math.random` is seeded and `Date` frozen to 2026-01-01 before page load —
   several of these apps generate content procedurally.
-- Pending `setTimeout`/`setInterval` are cancelled once the page has settled.
-  Zeroing CSS animation doesn't stop timer-driven DOM mutation, and an idle
-  animation caught mid-frame is a screenshot that never matches twice. Opt out
-  per target with `"freezeTimers": false`.
+- Before each screenshot, pending `setTimeout`/`setInterval` are cancelled and
+  Lottie's player is frozen at frame 0. Zeroing CSS animation reaches neither
+  timer-driven DOM mutation nor `requestAnimationFrame` playback, and an idle
+  animation caught mid-frame never matches twice. Opt out per target with
+  `"freezeTimers": false`.
+  This applies to the visual check only — stubbing `setTimeout` globally breaks
+  axe-core, which drives its rule queue through it.
 - Service workers are blocked, so a stale precache can't serve old assets.
 - Animations and transitions are zeroed; fonts and images are awaited.
 - Network-painted regions (map tiles) are masked per target.
 
-Verified stable across three consecutive runs.
+Verified stable across repeated local runs and reproduced in CI: the Linux run
+reports the same 29 failures as macOS, with zero visual diffs.
 
 ## CI
 
