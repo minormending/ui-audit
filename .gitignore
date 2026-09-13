@@ -1,0 +1,5 @@
+node_modules/
+playwright-report/
+test-results/
+design-review/shots/
+design-review/report.md
