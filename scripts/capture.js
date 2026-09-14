@@ -29,7 +29,10 @@ for (const target of selected) {
       const page = await context.newPage();
       try {
         await page.goto(`http://localhost:4173/${target.name}${pageDef.path}`, { waitUntil: 'load' });
-        if (target.waitFor) await page.waitForSelector(target.waitFor, { state: 'visible' });
+        // A page may name its own anchor: the target-level one is about the app
+        // shell, and a standalone page (a legal page, say) never renders it.
+        const waitFor = pageDef.waitFor ?? target.waitFor;
+        if (waitFor) await page.waitForSelector(waitFor, { state: 'visible' });
         // States with no URL of their own -- see `open` in targets.json. A
         // review that cannot see them is a review of the front door only.
         for (const selector of pageDef.open ?? []) {
