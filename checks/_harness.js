@@ -48,19 +48,38 @@ export const cases = selected.flatMap(t =>
     // another — a test that cannot fail. visibility:hidden stops it painting
     // without occluding the UI layered on top of it.
     hide: [...(t.hide ?? []), ...(p.hide ?? [])],
+    // Backend responses served from committed JSON instead of the network.
+    // A target that reads a live database otherwise makes the suite depend on
+    // that database being awake and unchanged — two things that have nothing
+    // to do with whether the UI regressed.
+    fixtures: [...(t.fixtures ?? []), ...(p.fixtures ?? [])],
     // Opt out where an app needs timers to keep running to reach a stable view.
     freezeTimers: p.freezeTimers ?? t.freezeTimers ?? true,
+    // Selectors to click, in order, once the page has loaded -- how a state
+    // that has no URL of its own gets audited. Several of these apps put most
+    // of themselves behind a press: a card that swaps, a settings sheet, a
+    // gateway offering three ways in. Registered by path alone, the suite sees
+    // the first screen and nothing else.
+    open: p.open ?? [],
   }))
 );
 
 export const githubUser = config.githubUser;
 
 /**
- * Navigate and hold until the page is visually settled, while recording the
- * console errors and failed requests that happened along the way.
- * Returns the collected problems so individual checks can assert on them.
+ * Navigate, press whatever it takes to reach the state, and hold until the page
+ * is visually settled -- while recording the console errors and failed requests
+ * that happened along the way. Returns the collected problems so individual
+ * checks can assert on them.
+ *
+ * **Takes the whole case rather than its parts.** It used to take `url` and
+ * `waitFor` positionally, and `open` would have made three -- four call sites
+ * that must each remember to pass the same new field, which is how three checks
+ * end up auditing the opened state and the fourth quietly auditing the page it
+ * was opened from. Handing over the case makes that impossible to get wrong.
  */
-export async function visit(page, url, waitFor = null) {
+export async function visit(page, c) {
+  const { url, waitFor = null, open = [] } = c;
   const consoleErrors = [];
   const failedRequests = [];
 
@@ -100,9 +119,36 @@ export async function visit(page, url, waitFor = null) {
 
   await page.goto(url, { waitUntil: 'load' });
   if (waitFor) await page.waitForSelector(waitFor, { state: 'visible' });
+  // Bounded, and allowed to throw. A selector that no longer matches means the
+  // state was never reached -- and every assertion after it would then be made
+  // against the wrong screen and pass, which is worse than a red test. Failing
+  // here names the selector; failing later names nothing.
+  for (const selector of open) {
+    await page.locator(selector).first().click({ timeout: 5_000 });
+  }
   await settle(page);
 
   return { consoleErrors, failedRequests };
+}
+
+/**
+ * Serve backend calls from disk. Entries are tried in order, so put specific
+ * patterns first and a catch-all last — Playwright checks the most recently
+ * registered handler first, hence the reverse.
+ */
+export async function installFixtures(page, fixtures) {
+  if (!fixtures?.length) return;
+  for (const f of [...fixtures].reverse()) {
+    const body = f.file
+      ? await readFile(join(root, f.file), 'utf8')
+      : JSON.stringify(f.body ?? []);
+    await page.route(f.url, route => route.fulfill({
+      status: f.status ?? 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body,
+    }));
+  }
 }
 
 /** Stop an element painting without removing it from layout. */

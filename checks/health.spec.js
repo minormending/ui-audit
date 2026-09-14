@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { cases, visit } from './_harness.js';
+import { cases, visit, installFixtures } from './_harness.js';
 
 // The checks a human reviewer forgets to do: did anything throw, did anything
 // 404, and does the document have the metadata a real site needs.
 for (const c of cases) {
   test(`health: ${c.id}`, async ({ page }) => {
-    const { consoleErrors, failedRequests } = await visit(page, c.url, c.waitFor);
+    await installFixtures(page, c.fixtures);
+    const { consoleErrors, failedRequests } = await visit(page, c);
 
     expect(failedRequests, 'requests that failed or 404ed').toEqual([]);
     expect(consoleErrors, 'console errors').toEqual([]);

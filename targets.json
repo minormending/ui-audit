@@ -9,10 +9,16 @@
     { "name": "crest-cards",      "dir": "../crest-cards", "repo": "crest-cards",      "pages": [{ "path": "/", "name": "home" }] },
     { "name": "behaviour-garden", "dir": "../behaviour-garden", "repo": "behaviour-garden", "pages": [{ "path": "/", "name": "home" }, { "path": "/art.html", "name": "art" }] },
     { "name": "crawler",          "dir": "../crawler", "repo": "deepdelve",          "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "crystal-pilot-mobile", "dir": "../crystal-pilot-mobile", "repo": "crystal-pilot-mobile", "mask": ["#version"], "pages": [{ "path": "/", "name": "home" }] },
+    { "name": "crystal-pilot-mobile", "dir": "../crystal-pilot-mobile", "repo": "crystal-pilot-mobile", "mask": ["#version"], "ignore": ["p a"], "pages": [
+      { "path": "/", "name": "home" },
+      { "path": "/", "name": "loader",   "open": ["#gate-files"] },
+      { "path": "/", "name": "watch",    "open": ["#gate-watch"] },
+      { "path": "/", "name": "about",    "open": ["#gate-about"] },
+      { "path": "/", "name": "settings", "open": ["#gear"] }
+    ] },
 
     { "name": "nyc-lyfe",     "dir": "../nyc-lyfe/dist", "repo": "nyc-lyfe",     "build": "VITE_BASE_PATH=/nyc-lyfe/ npm run build", "waitFor": "#screen-title", "pages": [{ "path": "/", "name": "home" }] },
-    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "npm run build", "waitFor": "#root > *", "ignore": [".maplibregl-ctrl-attrib", ".sr-only", "p a"], "hide": [".maplibregl-canvas", ".banner-count"], "pages": [{ "path": "/", "name": "home" }, { "path": "/privacy.html", "name": "privacy", "waitFor": "h1" }, { "path": "/terms.html", "name": "terms", "waitFor": "h1" }] },
+    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "VITE_SUPABASE_URL=https://fixture.supabase.co VITE_SUPABASE_ANON_KEY=sb_publishable_fixture_not_a_real_key npm run build", "waitFor": "#root > *", "ignore": [".maplibregl-ctrl-attrib", ".sr-only", "p a"], "hide": [".maplibregl-canvas"], "fixtures": [{ "url": "**/rest/v1/rpc/bathrooms_in_view", "file": "fixtures/restroom-map/bathrooms-in-view.json" }, { "url": "**/*.supabase.co/**", "body": [] }], "pages": [{ "path": "/", "name": "home" }, { "path": "/privacy.html", "name": "privacy", "waitFor": "h1" }, { "path": "/terms.html", "name": "terms", "waitFor": "h1" }] },
     { "name": "calcuken",     "dir": "../calcuken/dist", "repo": "calcuken",     "build": "VITE_BASE_PATH=/calcuken/ npm run build", "waitFor": "#root > *", "pages": [{ "path": "/", "name": "home" }] }
   ]
 }

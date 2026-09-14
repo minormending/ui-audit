@@ -30,6 +30,11 @@ for (const target of selected) {
       try {
         await page.goto(`http://localhost:4173/${target.name}${pageDef.path}`, { waitUntil: 'load' });
         if (target.waitFor) await page.waitForSelector(target.waitFor, { state: 'visible' });
+        // States with no URL of their own -- see `open` in targets.json. A
+        // review that cannot see them is a review of the front door only.
+        for (const selector of pageDef.open ?? []) {
+          await page.locator(selector).first().click({ timeout: 5_000 });
+        }
         await page.evaluate(() => document.fonts.ready);
         // Unlike the visual check, motion is left running — a design review
         // should see the page as a user does, mid-animation and all.
