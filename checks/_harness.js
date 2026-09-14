@@ -53,6 +53,10 @@ export const cases = selected.flatMap(t =>
     // that database being awake and unchanged — two things that have nothing
     // to do with whether the UI regressed.
     fixtures: [...(t.fixtures ?? []), ...(p.fixtures ?? [])],
+    // Per-target visual budget for content that genuinely cannot render the
+    // same twice. Measured at zero tolerance, not picked — and a number worth
+    // driving back down rather than living with.
+    maxDiffPixels: p.maxDiffPixels ?? t.maxDiffPixels ?? null,
     // Opt out where an app needs timers to keep running to reach a stable view.
     freezeTimers: p.freezeTimers ?? t.freezeTimers ?? true,
     // Selectors to click, in order, once the page has loaded -- how a state

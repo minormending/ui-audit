@@ -13,6 +13,7 @@ for (const c of cases) {
     await expect(page).toHaveScreenshot(`${c.target}--${c.page}.png`, {
       fullPage: true,
       mask: c.mask.map(sel => page.locator(sel)),
+      ...(c.maxDiffPixels != null ? { maxDiffPixels: c.maxDiffPixels } : {}),
     });
   });
 }

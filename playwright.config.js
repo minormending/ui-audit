@@ -19,9 +19,19 @@ export default defineConfig({
 
   expect: {
     toHaveScreenshot: {
-      // Anti-aliasing and font hinting differ enough between machines that a
-      // zero-tolerance diff is pure noise. 0.2% of pixels is the practical floor.
-      maxDiffPixelRatio: 0.002,
+      // An absolute budget, not a ratio. A ratio scales tolerance with viewport
+      // area, so the same change that failed on a 390x844 phone passed on a
+      // 1280x800 desktop — 0.2% is 658 pixels there and 2048 here. The biggest
+      // screens were the least sensitive, and a changed number or short label
+      // never registered on any of them.
+      //
+      // Measured, not guessed: at zero tolerance 76 of 90 checks across every
+      // target diff by exactly 0 pixel. Baselines are already per-platform, so
+      // the cross-machine font-hinting argument mostly does not apply. 40 is
+      // headroom for sub-pixel jitter while still catching a single changed
+      // word. Targets with genuinely non-deterministic content carry their own
+      // measured budget in targets.json.
+      maxDiffPixels: 40,
       animations: 'disabled',
       caret: 'hide',
       scale: 'css',
