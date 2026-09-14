@@ -140,24 +140,64 @@ export async function visit(page, c) {
   return { consoleErrors, failedRequests };
 }
 
+/** Minimal glob -> RegExp: ** spans separators, * does not. */
+function globToRegExp(glob) {
+  const rx = glob
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*\*/g, '\u0000')
+    .replace(/\*/g, '[^/]*')
+    .replace(/\u0000/g, '.*')
+    .replace(/\?/g, '.');
+  return new RegExp(`^${rx}$`);
+}
+
 /**
- * Serve backend calls from disk. Entries are tried in order, so put specific
- * patterns first and a catch-all last — Playwright checks the most recently
- * registered handler first, hence the reverse.
+ * Serve backend calls from disk, so a target that reads a live database does
+ * not make the suite depend on that database being awake and unchanged.
+ *
+ * ONE route handler dispatches by pattern in array order, first match wins.
+ * Registering a handler per entry made the result depend on how Playwright
+ * orders overlapping routes, and a catch-all silently beat the specific
+ * pattern it was meant to sit behind — the app got [] and rendered an empty
+ * map while the suite passed.
  */
 export async function installFixtures(page, fixtures) {
   if (!fixtures?.length) return;
-  for (const f of [...fixtures].reverse()) {
-    const body = f.file
+
+  const compiled = await Promise.all(fixtures.map(async f => ({
+    test: globToRegExp(f.url),
+    status: f.status ?? 200,
+    body: f.file
       ? await readFile(join(root, f.file), 'utf8')
-      : JSON.stringify(f.body ?? []);
-    await page.route(f.url, route => route.fulfill({
-      status: f.status ?? 200,
-      contentType: 'application/json',
-      headers: { 'access-control-allow-origin': '*' },
-      body,
-    }));
-  }
+      : JSON.stringify(f.body ?? []),
+  })));
+
+  await page.route(
+    url => compiled.some(c => c.test.test(url.toString())),
+    route => {
+      const hit = compiled.find(c => c.test.test(route.request().url()));
+      // Clients like supabase-js send apikey/authorization, which makes the
+      // browser preflight. A fulfilled response that only sets allow-origin
+      // fails that preflight, the real request never leaves, and the app sees
+      // an empty result rather than an error — silent, and easy to mistake for
+      // the fixture simply not matching.
+      const cors = {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS',
+        'access-control-allow-headers': '*',
+        'access-control-expose-headers': 'content-range',
+      };
+      if (route.request().method() === 'OPTIONS') {
+        return route.fulfill({ status: 204, headers: cors, body: '' });
+      }
+      return route.fulfill({
+        status: hit.status,
+        contentType: 'application/json',
+        headers: cors,
+        body: hit.body,
+      });
+    },
+  );
 }
 
 /** Stop an element painting without removing it from layout. */
