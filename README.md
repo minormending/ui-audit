@@ -79,6 +79,15 @@ A selector that matches nothing **fails the check**, deliberately. Everything
 after a missed click would otherwise be asserted against the screen it was meant
 to open *from*, and pass.
 
+**Every target here now has one**, because nearly every one of them keeps its
+whole interface behind a press: a landing page with a Start, a parent-settings
+screen in front of the child's, a six-step tutorial over the puzzle. Registering
+by path alone meant the suite had audited the front door of eleven apps and none
+of their insides. Twelve states added, and **thirty new failures** — including
+two whole classes that no landing page could have shown: a nested interactive
+control in learn-letters' game, and a scrollable region in crawler's dungeon
+that no keyboard can reach.
+
 `dir` is what gets served. **Vite projects must point at `dist/`**, and must be
 built with the base path Pages will serve from (`/<repo>/`) or every asset 404s.
 
