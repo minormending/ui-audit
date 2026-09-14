@@ -1,0 +1,7 @@
+{
+  "kind": "identitytoolkit#SignupNewUserResponse",
+  "idToken": "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vdWktYXVkaXQtZml4dHVyZSIsImF1ZCI6InVpLWF1ZGl0LWZpeHR1cmUiLCJhdXRoX3RpbWUiOjE3NjcyMjU2MDAsInVzZXJfaWQiOiJmaXh0dXJlLWFub24iLCJzdWIiOiJmaXh0dXJlLWFub24iLCJpYXQiOjE3NjcyMjU2MDAsImV4cCI6MTc5ODc2MTYwMCwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6e30sInNpZ25faW5fcHJvdmlkZXIiOiJhbm9ueW1vdXMifX0.fixture-not-a-signature",
+  "refreshToken": "fixture-refresh-token",
+  "expiresIn": "3600",
+  "localId": "fixture-anon"
+}

@@ -38,9 +38,27 @@ for (const c of cases) {
         }));
 
       // 2. Tap targets below the 24x24 CSS px floor (WCAG 2.2 SC 2.5.8).
+      //
+      // **With the Inline exception, which the rule cites and used to ignore.**
+      // 2.5.8 exempts a target "in a sentence or [whose] size is otherwise
+      // constrained by the line-height of non-target text" — a credits link in
+      // a footer line, a source link mid-paragraph. Without this the rule asks
+      // for something the standard does not, and the only way to satisfy it is
+      // to make prose links bigger than their own text; two targets had already
+      // worked around it with an `ignore` entry, which hides real findings in
+      // the same subtree.
+      const inlineInText = el => {
+        if (!getComputedStyle(el).display.startsWith('inline')) return false;
+        const parent = el.parentElement;
+        if (!parent) return false;
+        // Text of its own around it, not just other links in a row.
+        return [...parent.childNodes].some(n => n.nodeType === Node.TEXT_NODE
+                                           && n.textContent.trim().length > 1);
+      };
       const smallTargets = [...document.querySelectorAll('a, button, input, select, [role="button"]')]
         .filter(visible)
         .filter(el => !ignored(el))
+        .filter(el => !inlineInText(el))
         .filter(el => {
           const r = el.getBoundingClientRect();
           return r.width < 24 || r.height < 24;
