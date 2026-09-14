@@ -55,9 +55,29 @@ Add an entry to `targets.json`:
   "waitFor": "#root > *",            // for client-rendered apps
   "ignore": [".third-party-widget"], // exempt from layout rules
   "mask": [".map-canvas"],           // painted over before visual diffing
-  "pages": [{ "path": "/", "name": "home" }]
+  "pages": [
+    { "path": "/", "name": "home" },
+    { "path": "/", "name": "settings", "open": ["#gear"] }
+  ]
 }
 ```
+
+`open` is a list of selectors clicked in order once the page has loaded — how a
+state that has **no URL of its own** gets audited. Most of these apps keep most
+of themselves behind a press: a card that swaps in place, a settings sheet, a
+gateway offering three ways in. Registered by path alone the suite sees the
+screen you land on and stops there, which is the least interesting screen in the
+app and often the only one nobody has looked at.
+
+It is worth the trouble. Adding four of them to `crystal-pilot-mobile` — an app
+whose whole interface is behind a file picker, so the front door is all the
+harness can ever reach — turned a clean run into **fourteen failures**: three
+paragraphs at 1.47:1 because a vendor default was winning a specificity fight,
+and three back-links under the 24px tap-target floor.
+
+A selector that matches nothing **fails the check**, deliberately. Everything
+after a missed click would otherwise be asserted against the screen it was meant
+to open *from*, and pass.
 
 `dir` is what gets served. **Vite projects must point at `dist/`**, and must be
 built with the base path Pages will serve from (`/<repo>/`) or every asset 404s.
