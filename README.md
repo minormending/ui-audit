@@ -115,8 +115,12 @@ A flaky visual suite gets ignored, so the harness pins everything that varies:
 
 Verified stable across repeated local runs and reproduced in CI: **90 visual
 checks, five consecutive clean runs on macOS and zero visual diffs on Linux**.
-The suite's 56 remaining failures are all content — accessibility and layout
-faults in the targets themselves, spread across nine of the eleven apps.
+
+The suite is **green** — 360/360 on Linux, across thirty pages and three
+viewports. It has never been green before: 29 failures when the registry held
+eleven front doors, 56 once the states behind a click were added. Everything
+those found is fixed in the targets themselves, which is the only ending that
+keeps a red suite from becoming wallpaper.
 
 ## CI
 
