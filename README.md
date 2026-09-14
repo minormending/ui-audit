@@ -108,8 +108,15 @@ A flaky visual suite gets ignored, so the harness pins everything that varies:
 - Animations and transitions are zeroed; fonts and images are awaited.
 - Network-painted regions (map tiles) are masked per target.
 
-Verified stable across repeated local runs and reproduced in CI: the Linux run
-reports the same 29 failures as macOS, with zero visual diffs.
+- A state opened by `open` is waited for three ways before it is photographed:
+  the press happens after motion is zeroed, then a bounded `networkidle`, then a
+  quiet window with no DOM mutations. Each of the three was a measured flake, not
+  a precaution — see the commit that added them.
+
+Verified stable across repeated local runs and reproduced in CI: **90 visual
+checks, five consecutive clean runs on macOS and zero visual diffs on Linux**.
+The suite's 56 remaining failures are all content — accessibility and layout
+faults in the targets themselves, spread across nine of the eleven apps.
 
 ## CI
 
