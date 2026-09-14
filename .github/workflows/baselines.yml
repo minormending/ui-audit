@@ -39,9 +39,15 @@ jobs:
 
       # Only the visual check writes snapshots, and --update-snapshots makes it
       # pass by definition, so a failure here is a real harness or target fault.
+      #
+      # =all, not the default: plain --update-snapshots only rewrites a
+      # snapshot the comparison already called a mismatch, and maxDiffPixelRatio
+      # lets small changes through. A stale baseline whose diff sits under that
+      # threshold would survive a "refresh baselines" run untouched, which is
+      # the one thing this job exists to prevent.
       - name: Generate baselines
         working-directory: ui-audit
-        run: npx playwright test visual.spec.js --update-snapshots
+        run: npx playwright test visual.spec.js --update-snapshots=all
 
       - name: Commit any changes
         working-directory: ui-audit
