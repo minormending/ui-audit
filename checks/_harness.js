@@ -119,6 +119,14 @@ export async function visit(page, c) {
 
   await page.goto(url, { waitUntil: 'load' });
   if (waitFor) await page.waitForSelector(waitFor, { state: 'visible' });
+  // **Settle before pressing, not only after.** Playwright's click waits for
+  // the element to be *stable*, and a card still easing into place is not --
+  // so pressing a page whose motion has not been zeroed yet is a race against
+  // the transition. It lost on the first CI run it ever took, as a five-second
+  // timeout on a button that was visibly there: fast enough to pass every time
+  // on a laptop, slow enough to flake on a shared runner. `settle` turns the
+  // animations off, which is what makes the press deterministic.
+  await settle(page);
   // Bounded, and allowed to throw. A selector that no longer matches means the
   // state was never reached -- and every assertion after it would then be made
   // against the wrong screen and pass, which is worse than a red test. Failing
@@ -126,7 +134,8 @@ export async function visit(page, c) {
   for (const selector of open) {
     await page.locator(selector).first().click({ timeout: 5_000 });
   }
-  await settle(page);
+  // Again, because what a press reveals has its own fonts, images and reflow.
+  if (open.length) await settle(page);
 
   return { consoleErrors, failedRequests };
 }
