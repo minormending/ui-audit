@@ -3,3 +3,7 @@ playwright-report/
 test-results/
 design-review/shots/
 design-review/report.md
+# …and the per-target reports beside it, which the sweep writes one of each
+# run. `report.md` alone was the whole pattern, so `git add -A` swept three of
+# these in.
+design-review/report-*.md
