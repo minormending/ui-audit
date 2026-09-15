@@ -18,13 +18,16 @@
     ] },
 
     { "name": "nyc-lyfe", "maxDiffPixels": 400,     "dir": "../nyc-lyfe/dist", "repo": "nyc-lyfe",     "build": "VITE_BASE_PATH=/nyc-lyfe/ npm run build", "waitFor": "#screen-title", "pages": [{ "path": "/", "name": "home" }, { "path": "/", "name": "create", "open": [".btn-primary"] }, { "path": "/", "name": "howto", "open": [".btn-ghost"] }] },
-    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "VITE_SUPABASE_URL=https://fixture.supabase.co VITE_SUPABASE_ANON_KEY=sb_publishable_fixture_not_a_real_key npm run build", "waitFor": ".banner-count", "ignore": [".maplibregl-ctrl-attrib", ".sr-only", "p a"], "hide": [".maplibregl-canvas"], "mask": [".build-tag"], "fixtures": [{ "url": "**/rest/v1/rpc/bathrooms_in_view", "file": "fixtures/restroom-map/bathrooms-in-view.json" }, { "url": "**/*.supabase.co/**", "body": [] }], "pages": [
+    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "VITE_SUPABASE_URL=https://fixture.supabase.co VITE_SUPABASE_ANON_KEY=sb_publishable_fixture_not_a_real_key npm run build", "waitFor": ".banner-count", "ignore": [".maplibregl-ctrl-attrib", ".sr-only", "p a"], "hide": [".maplibregl-canvas", ".build-tag"], "fixtures": [{ "url": "**/rest/v1/rpc/bathrooms_in_view", "file": "fixtures/restroom-map/bathrooms-in-view.json" }, { "url": "**photon.komoot.io/**", "file": "fixtures/restroom-map/photon-maiden-lane.json" }, { "url": "**/*.supabase.co/**", "body": [] }], "storage": { "sb-fixture-auth-token": { "access_token": "audit-not-a-real-token", "token_type": "bearer", "expires_at": 4102444800, "expires_in": 3600, "refresh_token": "audit-not-a-real-token", "user": { "id": "00000000-0000-4000-8000-0000000a0d17", "aud": "authenticated", "role": "authenticated", "email": "audit@example.invalid", "app_metadata": {}, "user_metadata": { "full_name": "Audit Tester" }, "created_at": "2026-01-01T00:00:00Z" } } }, "pages": [
       { "path": "/", "name": "home", "open": [".intro-go"] },
       { "path": "/", "name": "intro" },
       { "path": "/privacy.html", "name": "privacy", "waitFor": "h1" },
       { "path": "/terms.html", "name": "terms", "waitFor": "h1" },
       { "path": "/", "name": "filters", "open": [".intro-go", ".filters-toggle"] },
-      { "path": "/", "name": "nearby", "open": [".intro-go"], "geolocation": { "latitude": 40.705277, "longitude": -74.005516, "accuracy": 8 } }
+      { "path": "/", "name": "nearby", "open": [".intro-go"], "geolocation": { "latitude": 40.705277, "longitude": -74.005516, "accuracy": 8 } },
+      { "path": "/", "name": "add", "open": [".intro-go", ".add-place"] },
+      { "path": "/", "name": "add-crosshair", "open": [".intro-go", ".add-place", ".placing-actions .btn-primary"] },
+      { "path": "/", "name": "add-searched", "open": [".intro-go", ".add-place", { "fill": ".placing .search input", "text": "180 Maiden Lane" }, ".search-results button"] }
     ] },
     { "name": "calcuken",     "dir": "../calcuken/dist", "repo": "calcuken",     "build": "VITE_BASE_PATH=/calcuken/ npm run build", "waitFor": "#root > *", "pages": [{ "path": "/", "name": "home" }, { "path": "/", "name": "puzzle", "open": [".stage-intro-overlay button:has-text(\"Skip\")"] }] }
   ]

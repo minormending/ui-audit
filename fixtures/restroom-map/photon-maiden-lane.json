@@ -1,0 +1,25 @@
+{
+  "features": [
+    {
+      "geometry": { "type": "Point", "coordinates": [-74.005516, 40.705277] },
+      "properties": {
+        "name": "180 Maiden Lane",
+        "street": "Maiden Lane",
+        "city": "New York",
+        "state": "New York",
+        "country": "United States"
+      }
+    },
+    {
+      "geometry": { "type": "Point", "coordinates": [-74.006010, 40.705880] },
+      "properties": {
+        "name": "Maiden Lane",
+        "street": "Maiden Lane",
+        "city": "New York",
+        "state": "New York",
+        "country": "United States"
+      }
+    }
+  ],
+  "type": "FeatureCollection"
+}

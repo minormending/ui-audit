@@ -65,6 +65,11 @@ export const cases = selected.flatMap(t =>
     // suite only ever sees the one it falls back to when permission is
     // refused. {latitude, longitude, accuracy}.
     geolocation: p.geolocation ?? t.geolocation ?? null,
+    // Browser storage seeded before the first script runs. For a state gated
+    // on something the app reads out of localStorage at startup -- a session,
+    // a dismissed banner, a saved preference -- which no click can reach and
+    // no permission grants.
+    storage: p.storage ?? t.storage ?? null,
     // Selectors to click, in order, once the page has loaded -- how a state
     // that has no URL of its own gets audited. Several of these apps put most
     // of themselves behind a press: a card that swaps, a settings sheet, a
@@ -89,7 +94,7 @@ export const githubUser = config.githubUser;
  * was opened from. Handing over the case makes that impossible to get wrong.
  */
 export async function visit(page, c) {
-  const { url, waitFor = null, open = [], geolocation = null } = c;
+  const { url, waitFor = null, open = [], geolocation = null, storage = null } = c;
   const consoleErrors = [];
   const failedRequests = [];
 
@@ -142,6 +147,20 @@ export async function visit(page, c) {
     await page.context().setGeolocation(geolocation);
   }
 
+  // Before the page's own scripts, so a client that reads its session on
+  // construction sees one. Values that are not already strings are stringified,
+  // which is how they are written in targets.json -- nested JSON rather than a
+  // quoted blob nobody can read or edit.
+  if (storage) {
+    await page.addInitScript((items) => {
+      try {
+        for (const [key, value] of Object.entries(items)) {
+          localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        }
+      } catch { /* private mode; the case will fail on its own terms */ }
+    }, storage);
+  }
+
   await page.goto(url, { waitUntil: 'load' });
   if (waitFor) await page.waitForSelector(waitFor, { state: 'visible' });
   // **Settle before pressing, not only after.** Playwright's click waits for
@@ -156,8 +175,16 @@ export async function visit(page, c) {
   // state was never reached -- and every assertion after it would then be made
   // against the wrong screen and pass, which is worse than a red test. Failing
   // here names the selector; failing later names nothing.
-  for (const selector of open) {
-    await page.locator(selector).first().click({ timeout: 5_000 });
+  for (const step of open) {
+    if (typeof step === 'string') {
+      await page.locator(step).first().click({ timeout: 5_000 });
+      continue;
+    }
+    // { fill, text } types into a field. A state behind a search box is not
+    // reachable by pressing things -- restroom-map's add-a-place flow puts the
+    // screen its testers complained about behind an address the person types,
+    // and clicking alone only ever reaches the empty form.
+    await page.locator(step.fill).first().fill(step.text, { timeout: 5_000 });
   }
   // Again, because what a press reveals has its own fonts, images and reflow --
   // and first wait for it to stop changing at all. What a press opens is often
