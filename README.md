@@ -63,6 +63,46 @@ Add an entry to `targets.json`:
 }
 ```
 
+An `open` step may also be an object rather than a selector:
+
+```json
+"open": [
+  "#gate-files",
+  { "upload": "#romFile", "file": "dev/pokecrystal.gbc" },
+  { "waitFor": "#ctrls:not(.hide)", "timeout": 90000 },
+  { "fill": "#search", "text": "Brooklyn" },
+  { "click": ".modes button[data-pane='play']", "optional": true }
+]
+```
+
+`upload` puts a real file into a file input, `file` resolved against the
+target's own directory. `waitFor` holds until something the *app* does appears,
+which a click cannot express — loading a 2MB ROM takes seconds and every step
+after it would otherwise race the boot. `fill` types into a field. `click` with
+`optional` presses a control that only exists in some layouts, and is the one
+step allowed to find nothing: a plain selector that misses **fails loudly** on
+purpose, because everything after a missed click is asserted against the wrong
+screen and passes.
+
+A target may also declare `requires`, a list of files it cannot run without:
+
+```json
+"requires": ["dev/pokecrystal.gbc", "dev/pokecrystal.sym"]
+```
+
+Missing any of them and the target is skipped silently, which is how a project
+whose interesting screens sit behind a file the repository may not contain gets
+audited at all. `crystal-pilot-ingame` is that case — the app is three cards and
+a settings sheet until a Game Boy ROM is loaded, and the ROM has to be built
+from a disassembly that is nobody's to distribute. It runs on the developer's
+machine, where `dev/` has one, and is simply absent on a runner. Its baselines
+are therefore darwin-only and CI never sees it, which is the trade: the checks
+that matter most run where the files are.
+
+It earns its keep. The first run of that target found three tap targets under
+the 24×24 floor and a 2.4:1 contrast failure, none of which any gateway
+screenshot could ever have reached.
+
 `open` is a list of selectors clicked in order once the page has loaded — how a
 state that has **no URL of its own** gets audited. Most of these apps keep most
 of themselves behind a press: a card that swaps in place, a settings sheet, a

@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,9 +20,29 @@ const adhoc = process.env.AUDIT_DIR
 // AUDIT_ONLY=name[,name] narrows a registry run — how a single project's CI
 // audits just itself using the shared harness.
 const only = process.env.AUDIT_ONLY?.split(',').map(s => s.trim()).filter(Boolean);
-const selected = adhoc
+const chosen = adhoc
   ? adhoc
   : only?.length ? config.targets.filter(t => only.includes(t.name)) : config.targets;
+
+/**
+ * A target may declare files it cannot run without, and be skipped where they
+ * are absent instead of failing there.
+ *
+ * This exists for one shape of target and it is worth naming: an app whose
+ * *interesting* screens are behind a file the repository is not allowed to
+ * contain. crystal-pilot-mobile is the whole of its own audit before a
+ * cartridge is loaded -- three cards and a settings sheet -- while everything
+ * that has actually broken lately is the layout *with* a game running, which
+ * needs a ROM built from a disassembly that is nobody's to distribute. So the
+ * in-game target reads one out of the developer's own `dev/` directory, and
+ * simply is not there on a runner that has none.
+ *
+ * Silent rather than noisy. A skip that prints a warning every run is a warning
+ * everybody learns to scroll past, and CI skipping this is the normal case
+ * rather than a problem to report.
+ */
+const selected = chosen.filter(t => !t.requires
+  || t.requires.every(f => existsSync(resolve(root, t.dir, f))));
 
 if (!adhoc && only?.length && !selected.length) {
   throw new Error(`AUDIT_ONLY matched no targets. Known: ${config.targets.map(t => t.name).join(', ')}`);
@@ -31,6 +52,7 @@ if (!adhoc && only?.length && !selected.length) {
 export const cases = selected.flatMap(t =>
   t.pages.map(p => ({
     target: t.name,
+    dir: t.dir,
     page: p.name,
     id: `${t.name}/${p.name}`,
     url: `/${t.name}${p.path}`,
@@ -95,6 +117,7 @@ export const githubUser = config.githubUser;
  */
 export async function visit(page, c) {
   const { url, waitFor = null, open = [], geolocation = null, storage = null } = c;
+  // `c.dir` is the target's directory -- see the { upload } step below.
   const consoleErrors = [];
   const failedRequests = [];
 
@@ -178,6 +201,35 @@ export async function visit(page, c) {
   for (const step of open) {
     if (typeof step === 'string') {
       await page.locator(step).first().click({ timeout: 5_000 });
+      continue;
+    }
+    // { upload, file } puts a real file into a file input, `file` relative to
+    // the target's own directory. The alternative for an app whose whole
+    // interesting half is behind a file picker is to audit the picker.
+    // { click, optional } presses something that only exists in some layouts.
+    // Narrow it deliberately: the loud failure above is right for a step that
+    // *reaches* a state, because everything after a missed click is asserted
+    // against the wrong screen and passes. This is for a control the layout
+    // itself removes -- crystal-pilot hides its Play key on the two wide
+    // layouts, where the pad has a place of its own and nothing needs swapping
+    // away to reach it, so the key is absent by design rather than by fault.
+    if (step.click) {
+      const el = page.locator(step.click).first();
+      if (!step.optional) { await el.click({ timeout: 5_000 }); continue; }
+      if (await el.count() && await el.isVisible()) await el.click({ timeout: 5_000 });
+      continue;
+    }
+    if (step.upload) {
+      await page.setInputFiles(step.upload, resolve(root, c.dir, step.file));
+      continue;
+    }
+    // { waitFor, timeout } holds until something the *app* does appears --
+    // which a click cannot express. Loading a 2MB ROM and parsing a symbol
+    // file takes seconds, and every step after it would otherwise race the
+    // boot and be asserted against a page that is still empty.
+    if (step.waitFor) {
+      await page.waitForSelector(step.waitFor,
+                                 { state: 'visible', timeout: step.timeout ?? 60_000 });
       continue;
     }
     // { fill, text } types into a field. A state behind a search box is not
