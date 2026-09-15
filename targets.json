@@ -18,7 +18,13 @@
     ] },
 
     { "name": "nyc-lyfe", "maxDiffPixels": 400,     "dir": "../nyc-lyfe/dist", "repo": "nyc-lyfe",     "build": "VITE_BASE_PATH=/nyc-lyfe/ npm run build", "waitFor": "#screen-title", "pages": [{ "path": "/", "name": "home" }, { "path": "/", "name": "create", "open": [".btn-primary"] }, { "path": "/", "name": "howto", "open": [".btn-ghost"] }] },
-    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "VITE_SUPABASE_URL=https://fixture.supabase.co VITE_SUPABASE_ANON_KEY=sb_publishable_fixture_not_a_real_key npm run build", "waitFor": ".banner-count", "ignore": [".maplibregl-ctrl-attrib", ".sr-only", "p a"], "hide": [".maplibregl-canvas"], "fixtures": [{ "url": "**/rest/v1/rpc/bathrooms_in_view", "file": "fixtures/restroom-map/bathrooms-in-view.json" }, { "url": "**/*.supabase.co/**", "body": [] }], "pages": [{ "path": "/", "name": "home" }, { "path": "/privacy.html", "name": "privacy", "waitFor": "h1" }, { "path": "/terms.html", "name": "terms", "waitFor": "h1" }, { "path": "/", "name": "filters", "open": [".filters-toggle"] }] },
+    { "name": "restroom-map", "dir": "../restroom-map/dist", "repo": "restroom-map", "build": "VITE_SUPABASE_URL=https://fixture.supabase.co VITE_SUPABASE_ANON_KEY=sb_publishable_fixture_not_a_real_key npm run build", "waitFor": ".banner-count", "ignore": [".maplibregl-ctrl-attrib", ".sr-only", "p a"], "hide": [".maplibregl-canvas"], "mask": [".build-tag"], "fixtures": [{ "url": "**/rest/v1/rpc/bathrooms_in_view", "file": "fixtures/restroom-map/bathrooms-in-view.json" }, { "url": "**/*.supabase.co/**", "body": [] }], "pages": [
+      { "path": "/", "name": "home", "open": [".intro-go"] },
+      { "path": "/", "name": "intro" },
+      { "path": "/privacy.html", "name": "privacy", "waitFor": "h1" },
+      { "path": "/terms.html", "name": "terms", "waitFor": "h1" },
+      { "path": "/", "name": "filters", "open": [".intro-go", ".filters-toggle"] }
+    ] },
     { "name": "calcuken",     "dir": "../calcuken/dist", "repo": "calcuken",     "build": "VITE_BASE_PATH=/calcuken/ npm run build", "waitFor": "#root > *", "pages": [{ "path": "/", "name": "home" }, { "path": "/", "name": "puzzle", "open": [".stage-intro-overlay button:has-text(\"Skip\")"] }] }
   ]
 }
