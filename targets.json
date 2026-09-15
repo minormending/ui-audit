@@ -23,7 +23,8 @@
       { "path": "/", "name": "intro" },
       { "path": "/privacy.html", "name": "privacy", "waitFor": "h1" },
       { "path": "/terms.html", "name": "terms", "waitFor": "h1" },
-      { "path": "/", "name": "filters", "open": [".intro-go", ".filters-toggle"] }
+      { "path": "/", "name": "filters", "open": [".intro-go", ".filters-toggle"] },
+      { "path": "/", "name": "nearby", "open": [".intro-go"], "geolocation": { "latitude": 40.705277, "longitude": -74.005516, "accuracy": 8 } }
     ] },
     { "name": "calcuken",     "dir": "../calcuken/dist", "repo": "calcuken",     "build": "VITE_BASE_PATH=/calcuken/ npm run build", "waitFor": "#root > *", "pages": [{ "path": "/", "name": "home" }, { "path": "/", "name": "puzzle", "open": [".stage-intro-overlay button:has-text(\"Skip\")"] }] }
   ]

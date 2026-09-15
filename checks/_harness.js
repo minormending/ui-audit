@@ -59,6 +59,12 @@ export const cases = selected.flatMap(t =>
     maxDiffPixels: p.maxDiffPixels ?? t.maxDiffPixels ?? null,
     // Opt out where an app needs timers to keep running to reach a stable view.
     freezeTimers: p.freezeTimers ?? t.freezeTimers ?? true,
+    // Where the browser believes it is standing. Same problem `open` solves,
+    // one layer down: an app that behaves differently when it knows your
+    // location has states no URL and no click can reach, and without this the
+    // suite only ever sees the one it falls back to when permission is
+    // refused. {latitude, longitude, accuracy}.
+    geolocation: p.geolocation ?? t.geolocation ?? null,
     // Selectors to click, in order, once the page has loaded -- how a state
     // that has no URL of its own gets audited. Several of these apps put most
     // of themselves behind a press: a card that swaps, a settings sheet, a
@@ -83,7 +89,7 @@ export const githubUser = config.githubUser;
  * was opened from. Handing over the case makes that impossible to get wrong.
  */
 export async function visit(page, c) {
-  const { url, waitFor = null, open = [] } = c;
+  const { url, waitFor = null, open = [], geolocation = null } = c;
   const consoleErrors = [];
   const failedRequests = [];
 
@@ -120,6 +126,15 @@ export async function visit(page, c) {
       static now() { return FIXED; }
     };
   });
+
+  // Before navigation, both of them: a page that asks on load gets the answer
+  // it would have got from a person standing there, and granting the
+  // permission without setting a position hands it a pending request that
+  // never resolves.
+  if (geolocation) {
+    await page.context().grantPermissions(['geolocation']);
+    await page.context().setGeolocation(geolocation);
+  }
 
   await page.goto(url, { waitUntil: 'load' });
   if (waitFor) await page.waitForSelector(waitFor, { state: 'visible' });

@@ -57,7 +57,8 @@ Add an entry to `targets.json`:
   "mask": [".map-canvas"],           // painted over before visual diffing
   "pages": [
     { "path": "/", "name": "home" },
-    { "path": "/", "name": "settings", "open": ["#gear"] }
+    { "path": "/", "name": "settings", "open": ["#gear"] },
+    { "path": "/", "name": "here", "geolocation": { "latitude": 40.7, "longitude": -74, "accuracy": 8 } }
   ]
 }
 ```
@@ -87,6 +88,23 @@ of their insides. Twelve states added, and **thirty new failures** — including
 two whole classes that no landing page could have shown: a nested interactive
 control in learn-letters' game, and a scrollable region in crawler's dungeon
 that no keyboard can reach.
+
+`geolocation` is the same problem one layer down. An app that behaves
+differently when it knows where you are has states that no URL and no click can
+reach, and a headless browser refuses the permission by default — so the suite
+audits the fallback screen forever and never sees the real one.
+
+```json
+{ "path": "/", "name": "nearby", "open": [".intro-go"],
+  "geolocation": { "latitude": 40.705277, "longitude": -74.005516, "accuracy": 8 } }
+```
+
+Both the grant and the position are applied before navigation: granting without
+setting a position hands the page a request that never resolves, which looks
+exactly like a refusal until you read the trace. Put the coordinates on top of
+something in the target's own fixture — restroom-map's prompt only appears
+within 60m of a place it already knows about, and only when the fix is accurate
+to 40m, so a plausible-looking coordinate nearby is not good enough.
 
 `dir` is what gets served. **Vite projects must point at `dist/`**, and must be
 built with the base path Pages will serve from (`/<repo>/`) or every asset 404s.
