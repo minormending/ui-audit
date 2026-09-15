@@ -98,9 +98,15 @@ export async function visit(page, c) {
   });
   page.on('pageerror', err => consoleErrors.push(`[uncaught] ${err.message}`));
   page.on('requestfailed', req => {
-    // A cancelled request is usually the page navigating away, not a fault.
+    // A request the page stopped wanting is not a fault. Chrome reports one
+    // abandoned by a navigation as ERR_ABORTED; one the page cancelled itself
+    // arrives with the library's own wording instead -- MapLibre drops the
+    // tiles for a viewport it has just flown away from, and eight of those
+    // turned the first geolocated case red on one run and green on the next.
+    // Same meaning, different string, and a suite that goes red at random
+    // gets ignored.
     const failure = req.failure()?.errorText ?? '';
-    if (!failure.includes('ERR_ABORTED')) {
+    if (!ABANDONED.test(failure)) {
       failedRequests.push(`${req.url()} — ${failure}`);
     }
   });
@@ -178,6 +184,22 @@ export async function visit(page, c) {
 
   return { consoleErrors, failedRequests };
 }
+
+/**
+ * Request failures that mean "nobody is waiting for this any more".
+ *
+ * Every browser here words it differently for the same event: Chromium says
+ * `net::ERR_ABORTED`, WebKit on Linux says `Load request cancelled`, WebKit on
+ * macOS says just `cancelled`. Matching the exact strings looked tidier and was
+ * wrong on the first platform it met -- it was written against the CI wording
+ * and missed two of the three projects locally.
+ *
+ * Broad enough to worry about, so: a server dropping a response mid-flight does
+ * NOT land here. That arrives as ERR_CONNECTION_RESET or ERR_EMPTY_RESPONSE and
+ * still fails the check. Cancellation is a word these engines use for what the
+ * client chose to stop waiting for.
+ */
+const ABANDONED = /ERR_ABORTED|cancell?ed/i;
 
 /** Minimal glob -> RegExp: ** spans separators, * does not. */
 function globToRegExp(glob) {
