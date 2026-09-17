@@ -75,6 +75,14 @@ An `open` step may also be an object rather than a selector:
 ]
 ```
 
+`a11yExclude` keeps axe-core out of a subtree — not the same as `ignore`, which
+only exempts a subtree from the layout rules. This is for documents the target
+embeds but did not author: story-tale-reader renders each book page in an iframe
+from the publisher's own markup, which cannot be fixed here and which axe hangs on
+outright when the frame is `srcdoc` (it opens a page per frame to inject itself).
+Excluding those frames is what makes the check run at all — it went from a 30s
+timeout to 1.1s.
+
 `upload` puts a real file into a file input, `file` resolved against the
 target's own directory. `waitFor` holds until something the *app* does appears,
 which a click cannot express — loading a 2MB ROM takes seconds and every step

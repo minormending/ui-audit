@@ -9,9 +9,11 @@ for (const c of cases) {
     await installFixtures(page, c.fixtures);
     await visit(page, c);
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze();
+    let builder = new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']);
+    // Content the target embeds but does not author — see `a11yExclude`.
+    for (const selector of c.a11yExclude) builder = builder.exclude(selector);
+    const results = await builder.analyze();
 
     const violations = results.violations.map(v => ({
       id: v.id,

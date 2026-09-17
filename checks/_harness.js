@@ -61,6 +61,12 @@ export const cases = selected.flatMap(t =>
     // Selectors whose subtree is exempt from layout rules — third-party widgets
     // and map attribution you don't control the markup for.
     ignore: [...(t.ignore ?? []), ...(p.ignore ?? [])],
+    // Subtrees axe-core must not descend into. Not the same as `ignore`: this is
+    // for documents you did not author and cannot fix — an embedded third-party
+    // page, or a book rendered in an iframe from someone else's markup. Axe also
+    // has to open a page per frame to inject itself, and on srcdoc frames that
+    // can hang outright, so excluding them is what makes the check run at all.
+    a11yExclude: [...(t.a11yExclude ?? []), ...(p.a11yExclude ?? [])],
     // Regions painted over before screenshot comparison — map tiles, embeds,
     // anything whose pixels come from the network and will never match twice.
     mask: [...(t.mask ?? []), ...(p.mask ?? [])],
@@ -122,7 +128,9 @@ export async function visit(page, c) {
   const failedRequests = [];
 
   page.on('console', msg => {
-    if (msg.type() === 'error') consoleErrors.push(msg.text());
+    if (msg.type() === 'error' && !HARNESS_NOISE.test(msg.text())) {
+      consoleErrors.push(msg.text());
+    }
   });
   page.on('pageerror', err => consoleErrors.push(`[uncaught] ${err.message}`));
   page.on('requestfailed', req => {
@@ -263,6 +271,19 @@ export async function visit(page, c) {
 
   return { consoleErrors, failedRequests };
 }
+
+/**
+ * Console errors the harness itself provokes.
+ *
+ * The seeded RNG, the frozen clock and the motion zeroing are installed with
+ * `addInitScript`, which Playwright injects into *every* frame — including ones a
+ * target deliberately sandboxes without `allow-scripts`. Chrome refuses to run the
+ * injection and logs it, so the message describes the harness reaching into the
+ * frame, not anything the page did. story-tale-reader sandboxes the book pages on
+ * purpose, and going red for that would punish the safer choice.
+ */
+const HARNESS_NOISE =
+  /Blocked script execution in '[^']*' because the document's frame is sandboxed/;
 
 /**
  * Request failures that mean "nobody is waiting for this any more".
