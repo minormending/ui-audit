@@ -705,6 +705,48 @@
               "waitFor": ".lock-on"
             }
           ]
+        },
+        {
+          "path": "/",
+          "name": "reflowable",
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/reflowable-chapters.epub"
+            },
+            {
+              "waitFor": ".reflow-frame",
+              "timeout": 40000
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "name": "pdf",
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/sample-pages.pdf"
+            },
+            {
+              "waitFor": ".pdf-canvas",
+              "timeout": 40000
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "name": "mobi",
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/nest-on-the-slide.mobi"
+            },
+            {
+              "waitFor": ".reflow-frame",
+              "timeout": 40000
+            }
+          ]
         }
       ],
       "a11yExclude": [

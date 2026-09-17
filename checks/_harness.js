@@ -193,7 +193,28 @@ export async function visit(page, c) {
   }
 
   await page.goto(url, { waitUntil: 'load' });
-  if (waitFor) await page.waitForSelector(waitFor, { state: 'visible' });
+  if (waitFor) {
+    try {
+      await page.waitForSelector(waitFor, { state: 'visible' });
+    } catch (cause) {
+      // A Vite target built with the wrong base serves an index.html whose script
+      // and stylesheet URLs point somewhere this server does not mount, so nothing
+      // ever renders and *every* case for that target fails here — with a message
+      // about a missing selector and no hint of the real cause. It cost a full red
+      // run to work out once; it should cost a sentence from now on.
+      const missing = failedRequests.filter(r => r.includes('HTTP 404'));
+      if (missing.length) {
+        throw new Error(
+          `${c.id}: nothing rendered, and ${missing.length} request(s) 404ed. ` +
+          `If this is a Vite target, check it was built with the base path the ` +
+          `harness serves it from (/${c.target}/) — see "build" in targets.json. ` +
+          `First: ${missing[0]}`,
+          { cause },
+        );
+      }
+      throw cause;
+    }
+  }
   // **Settle before pressing, not only after.** Playwright's click waits for
   // the element to be *stable*, and a card still easing into place is not --
   // so pressing a page whose motion has not been zeroed yet is a race against

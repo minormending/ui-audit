@@ -84,7 +84,12 @@ Excluding those frames is what makes the check run at all — it went from a 30s
 timeout to 1.1s.
 
 `upload` puts a real file into a file input, `file` resolved against the
-target's own directory. `waitFor` holds until something the *app* does appears,
+target's own directory — and it may point outside it. story-tale-reader's
+reflowable, PDF and MOBI renderers are three separate code paths that nothing but
+a real book of that type reaches, so those states upload the target's own
+committed fixtures with `"file": "../corpus/fixtures/…"`. Registering a path alone
+would have audited one renderer out of four. A hidden input is fine; Playwright
+does not require it to be visible. `waitFor` holds until something the *app* does appears,
 which a click cannot express — loading a 2MB ROM takes seconds and every step
 after it would otherwise race the boot. `fill` types into a field. `click` with
 `optional` presses a control that only exists in some layouts, and is the one
