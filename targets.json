@@ -658,7 +658,7 @@
       "name": "story-tale-reader",
       "dir": "../story-tale-reader/dist",
       "repo": "story-tale-reader",
-      "build": "APP_BASE=/story-tale-reader/ npm run build",
+      "build": "APP_BASE=/story-tale-reader/ BUILD_ID=audit npm run build",
       "waitFor": "#root > *",
       "pages": [
         {
