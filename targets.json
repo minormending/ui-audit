@@ -747,6 +747,62 @@
               "timeout": 40000
             }
           ]
+        },
+        {
+          "path": "/",
+          "name": "resume-fixed",
+          "open": [
+            ".sample .primary",
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            ".chrome-bottom button:has-text(\"Next\")",
+            ".chrome-bottom button:has-text(\"Next\")",
+            ".chrome-bottom button:has-text(\"Next\")",
+            "button[aria-label=\"Back to library\"]",
+            {
+              "waitFor": ".shelf-open"
+            },
+            ".shelf-open",
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "name": "resume-reflowed",
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/reflowable-chapters.epub"
+            },
+            {
+              "waitFor": ".reflow-frame",
+              "timeout": 40000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu"
+            },
+            ".menu .chip:has-text(\"Bigger\")",
+            ".menu .chip:has-text(\"Bigger\")",
+            ".menu .chip:has-text(\"Bigger\")",
+            "button[aria-expanded]",
+            ".chrome-bottom button:has-text(\"Next\")",
+            ".chrome-bottom button:has-text(\"Next\")",
+            "button[aria-label=\"Back to library\"]",
+            {
+              "waitFor": ".shelf-open"
+            },
+            ".shelf-open",
+            {
+              "waitFor": ".reflow-frame",
+              "timeout": 40000
+            }
+          ]
         }
       ],
       "a11yExclude": [

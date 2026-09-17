@@ -195,7 +195,12 @@ export async function visit(page, c) {
   await page.goto(url, { waitUntil: 'load' });
   if (waitFor) {
     try {
-      await page.waitForSelector(waitFor, { state: 'visible' });
+      // An explicit timeout, deliberately shorter than the test's. Left to
+      // default, this inherits the test deadline — and when *that* fires Playwright
+      // tears the test down without running the catch below, so the diagnosis never
+      // printed. The guard was written, committed, and silently dead until the same
+      // base-path mistake happened a second time.
+      await page.waitForSelector(waitFor, { state: 'visible', timeout: 20_000 });
     } catch (cause) {
       // A Vite target built with the wrong base serves an index.html whose script
       // and stylesheet URLs point somewhere this server does not mount, so nothing
