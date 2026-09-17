@@ -690,6 +690,21 @@
               "waitFor": ".menu"
             }
           ]
+        },
+        {
+          "path": "/",
+          "name": "locked",
+          "open": [
+            ".sample .primary",
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            ".lock",
+            {
+              "waitFor": ".lock-on"
+            }
+          ]
         }
       ],
       "a11yExclude": [
