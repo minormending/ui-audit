@@ -673,6 +673,10 @@
             {
               "waitFor": ".spread",
               "timeout": 40000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
             }
           ]
         },
@@ -703,6 +707,10 @@
             ".lock",
             {
               "waitFor": ".lock-on"
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
             }
           ]
         },
@@ -717,6 +725,10 @@
             {
               "waitFor": ".reflow-frame",
               "timeout": 40000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
             }
           ]
         },
@@ -731,6 +743,10 @@
             {
               "waitFor": ".pdf-canvas",
               "timeout": 40000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
             }
           ]
         },
@@ -745,6 +761,10 @@
             {
               "waitFor": ".reflow-frame",
               "timeout": 40000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
             }
           ]
         },
@@ -768,6 +788,10 @@
             {
               "waitFor": ".spread",
               "timeout": 40000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
             }
           ],
           "viewports": [
@@ -803,6 +827,10 @@
             {
               "waitFor": ".reflow-frame",
               "timeout": 40000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
             }
           ],
           "viewports": [

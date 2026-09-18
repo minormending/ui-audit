@@ -191,6 +191,17 @@ A flaky visual suite gets ignored, so the harness pins everything that varies:
   quiet window with no DOM mutations. Each of the three was a measured flake, not
   a precaution — see the commit that added them.
 
+- A target that hides its own UI on a timer has to be waited for *by that state*,
+  not by the clock. story-tale-reader drops its toolbars three seconds after the
+  last interaction, and the harness's three waits take anywhere from well under
+  that to well over it depending on how loaded the machine is — so the same code
+  photographed with the toolbars up on a quiet laptop and down on a busy runner.
+  Those states end with `{ "waitFor": ".chrome-top.hidden" }`, which turns the
+  race into an assertion: the shot is taken once the hide has happened, and a
+  hide that stops working fails the state instead of silently changing it.
+  Its `fix-layout` state is the deliberate opposite — an open menu suspends the
+  hide, so that one baseline holds the toolbars still and covers how they look.
+
 Verified stable across repeated local runs and reproduced in CI: **90 visual
 checks, five consecutive clean runs on macOS and zero visual diffs on Linux**.
 
