@@ -713,12 +713,22 @@
             },
             ".contents-jump:has-text('Begin Reading')",
             {
-              "waitFor": ".chrome-centre span:has-text('2 / 16')",
+              "waitFor": ".menu",
+              "state": "detached",
               "timeout": 15000
             },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
+            },
+            ".spread",
             "button[aria-expanded]",
             {
-              "waitFor": ".contents-jump.contents-here"
+              "waitFor": ".menu"
+            },
+            {
+              "waitFor": ".contents-jump.contents-here:has-text('Begin Reading')",
+              "timeout": 15000
             }
           ]
         },
