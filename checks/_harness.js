@@ -266,6 +266,15 @@ export async function visit(page, c) {
       await page.setInputFiles(step.upload, resolve(root, c.dir, step.file));
       continue;
     }
+    // { press } sends a key to the page. A few states exist only for someone on
+    // a keyboard and cannot be reached by pressing things: story-tale-reader
+    // retires its toolbars three seconds after a press but holds them open for
+    // keyboard focus, so arriving at its locked state on the keyboard is the
+    // only way to photograph that state with its toolbar still on screen.
+    if (step.press) {
+      await page.keyboard.press(step.press);
+      continue;
+    }
     // { waitFor, timeout } holds until something the *app* does appears --
     // which a click cannot express. Loading a 2MB ROM and parsing a symbol
     // file takes seconds, and every step after it would otherwise race the

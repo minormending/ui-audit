@@ -709,8 +709,10 @@
               "waitFor": ".lock-on"
             },
             {
-              "waitFor": ".chrome-top.hidden",
-              "timeout": 15000
+              "press": "Tab"
+            },
+            {
+              "waitFor": ".chrome-top:not(.hidden)"
             }
           ]
         },

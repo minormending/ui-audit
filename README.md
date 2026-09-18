@@ -71,9 +71,16 @@ An `open` step may also be an object rather than a selector:
   { "upload": "#romFile", "file": "dev/pokecrystal.gbc" },
   { "waitFor": "#ctrls:not(.hide)", "timeout": 90000 },
   { "fill": "#search", "text": "Brooklyn" },
-  { "click": ".modes button[data-pane='play']", "optional": true }
+  { "click": ".modes button[data-pane='play']", "optional": true },
+  { "press": "Tab" }
 ]
 ```
+
+`press` sends a key to the page. Most states are reachable by pressing things, but
+a few exist only for someone on a keyboard: story-tale-reader holds its toolbars
+open for keyboard focus and retires them three seconds after a press, so its
+locked state is only photographable with the toolbar on screen by arriving there
+on the keyboard.
 
 `a11yExclude` keeps axe-core out of a subtree — not the same as `ignore`, which
 only exempts a subtree from the layout rules. This is for documents the target
