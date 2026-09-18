@@ -772,6 +772,52 @@
         },
         {
           "path": "/",
+          "name": "read-along",
+          "viewports": [
+            "desktop"
+          ],
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/narrated-spreads.epub"
+            },
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            {
+              "waitFor": ".play"
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
+            },
+            ".spread",
+            "button[aria-label='Play read-along']",
+            {
+              "waitFor": ".chrome-centre span:has-text('2 / 4')",
+              "timeout": 20000
+            },
+            {
+              "waitFor": ".play.play-on"
+            },
+            {
+              "waitFor": ".chrome-centre span:has-text('4 / 4')",
+              "timeout": 30000
+            },
+            {
+              "waitFor": ".play",
+              "state": "detached",
+              "timeout": 20000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "resume-fixed",
           "open": [
             ".sample .primary",

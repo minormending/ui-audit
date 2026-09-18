@@ -76,6 +76,12 @@ An `open` step may also be an object rather than a selector:
 ]
 ```
 
+`waitFor` takes an optional `state`, passed straight to Playwright: `visible` by
+default, or `detached` when the assertion is that something went away.
+story-tale-reader drops its read-along control when the narration ends, and the
+control being gone is the only evidence that reading stopped cleanly rather than
+hanging on a page with nothing left to play.
+
 `press` sends a key to the page. Most states are reachable by pressing things, but
 a few exist only for someone on a keyboard: story-tale-reader holds its toolbars
 open for keyboard focus and retires them three seconds after a press, so its

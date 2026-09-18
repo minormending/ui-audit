@@ -280,8 +280,12 @@ export async function visit(page, c) {
     // file takes seconds, and every step after it would otherwise race the
     // boot and be asserted against a page that is still empty.
     if (step.waitFor) {
+      // `state` for the cases where the assertion is that something went away.
+      // story-tale-reader drops its read-along control when the narration ends,
+      // and "the control is gone" is the only evidence that reading stopped
+      // cleanly rather than hanging on a page with nothing left to play.
       await page.waitForSelector(step.waitFor,
-                                 { state: 'visible', timeout: step.timeout ?? 60_000 });
+                                 { state: step.state ?? 'visible', timeout: step.timeout ?? 60_000 });
       continue;
     }
     // { fill, text } types into a field. A state behind a search box is not
