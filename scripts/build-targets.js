@@ -24,8 +24,15 @@ for (const t of buildable) {
   console.log(`\n=== building ${t.name} (${t.build})`);
   try {
     // Fresh CI checkouts have no node_modules; locally this is already done.
+    //
+    // `install` lets a target override the command. story-tale-reader needs it:
+    // sharp is in its devDependencies for generating icons, fixtures and its sample
+    // book — all of which are committed — and sharp's postinstall downloads libvips
+    // from a GitHub release. The Vite build never touches sharp, but the download
+    // still had to succeed for the audit to run, and the day it timed out it took
+    // the whole suite with it. Installing with --ignore-scripts skips it.
     if (!existsSync(join(cwd, 'node_modules'))) {
-      execSync('npm install --no-audit --no-fund', { cwd, stdio: 'inherit' });
+      execSync(t.install ?? 'npm install --no-audit --no-fund', { cwd, stdio: 'inherit' });
     }
     execSync(t.build, { cwd, stdio: 'inherit' });
   } catch {

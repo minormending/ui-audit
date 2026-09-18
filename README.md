@@ -159,6 +159,13 @@ something in the target's own fixture — restroom-map's prompt only appears
 within 60m of a place it already knows about, and only when the fix is accurate
 to 40m, so a plausible-looking coordinate nearby is not good enough.
 
+`install` overrides how a target's dependencies are installed on a fresh checkout.
+story-tale-reader needs it: `sharp` is in its devDependencies for generating icons,
+fixtures and its sample book — all committed — and sharp's postinstall downloads
+libvips from a GitHub release. The Vite build never touches sharp, but that
+download still had to succeed for the audit to run, and the day it timed out it
+took the whole suite with it. `npm ci --ignore-scripts` skips it.
+
 `dir` is what gets served. **Vite projects must point at `dist/`**, and must be
 built with the base path Pages will serve from (`/<repo>/`) or every asset 404s.
 

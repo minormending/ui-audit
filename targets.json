@@ -816,7 +816,8 @@
       ],
       "mask": [
         ".storage-line"
-      ]
+      ],
+      "install": "npm ci --no-audit --no-fund --ignore-scripts"
     }
   ]
 }
