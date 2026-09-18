@@ -730,6 +730,9 @@
               "waitFor": ".contents-jump.contents-here:has-text('Begin Reading')",
               "timeout": 15000
             }
+          ],
+          "viewports": [
+            "desktop"
           ]
         },
         {
