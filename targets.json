@@ -697,6 +697,33 @@
         },
         {
           "path": "/",
+          "name": "contents",
+          "open": [
+            ".sample .primary",
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu"
+            },
+            {
+              "waitFor": ".contents-jump:has-text('Begin Reading')"
+            },
+            ".contents-jump:has-text('Begin Reading')",
+            {
+              "waitFor": ".chrome-centre span:has-text('2 / 16')",
+              "timeout": 15000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".contents-jump.contents-here"
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "locked",
           "open": [
             ".sample .primary",
