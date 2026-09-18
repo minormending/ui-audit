@@ -769,6 +769,9 @@
               "waitFor": ".spread",
               "timeout": 40000
             }
+          ],
+          "viewports": [
+            "desktop"
           ]
         },
         {
@@ -789,7 +792,6 @@
             },
             ".menu .chip:has-text(\"Bigger\")",
             ".menu .chip:has-text(\"Bigger\")",
-            ".menu .chip:has-text(\"Bigger\")",
             "button[aria-expanded]",
             ".chrome-bottom button:has-text(\"Next\")",
             ".chrome-bottom button:has-text(\"Next\")",
@@ -802,6 +804,9 @@
               "waitFor": ".reflow-frame",
               "timeout": 40000
             }
+          ],
+          "viewports": [
+            "desktop"
           ]
         }
       ],

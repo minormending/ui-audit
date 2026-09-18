@@ -3,7 +3,27 @@ import { resolveTargets } from './scripts/targets.js';
 
 // The readiness probe has to hit a path this run actually mounts — with
 // AUDIT_DIR the registry targets aren't served at all.
-const firstTarget = (await resolveTargets())[0]?.name ?? 'grumpy-bunny';
+const targets = await resolveTargets();
+const firstTarget = targets[0]?.name ?? 'grumpy-bunny';
+
+/*
+ * Cases a project must not collect, from each page's `viewports`.
+ *
+ * Filtering at collection rather than inside the test is the whole point: a
+ * `test.skip()` in the body still spins up a browser context first, and on a busy
+ * machine simply tearing that context down blew the test timeout — a state that had
+ * opted out of the viewport failing because of the viewport it opted out of.
+ */
+const optedOut = (project) => {
+  const ids = targets
+    .flatMap((t) => (t.pages ?? []).map((p) => ({
+      id: `${t.name}/${p.name}`,
+      viewports: p.viewports ?? t.viewports ?? null,
+    })))
+    .filter((c) => c.viewports && !c.viewports.includes(project))
+    .map((c) => c.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return ids.length ? new RegExp(ids.join('|')) : undefined;
+};
 
 // AUDIT_URL lets the same suite run against a deployed Pages site instead of
 // the local mounts, e.g. AUDIT_URL=https://minormending.github.io
@@ -15,6 +35,21 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+
+  /*
+   * Long enough for the harness's own step timeouts to mean something.
+   *
+   * At Playwright's 30s default, an `open` step's `waitFor` — documented as
+   * allowing 60s, and asked for 40s by several targets — could never be honoured:
+   * whichever came first, the *test* deadline fired, and Playwright tears a test
+   * down at that point without running any of the surrounding error handling. A
+   * state reached by a dozen real clicks, each with settling waits behind it, ran
+   * fine on a fast laptop and died mid-chain on a CI runner, reporting only a
+   * missing selector.
+   *
+   * This is a ceiling, not a cost: a fast case still finishes in a second.
+   */
+  timeout: 90_000,
   reporter: [['html', { open: 'never' }], ['list']],
 
   expect: {
@@ -51,9 +86,13 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
-    { name: 'tablet',  use: { ...devices['iPad (gen 7)'] } },
-    { name: 'mobile',  use: { ...devices['iPhone 13'] } },
+    {
+      name: 'desktop',
+      grepInvert: optedOut('desktop'),
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+    },
+    { name: 'tablet', grepInvert: optedOut('tablet'), use: { ...devices['iPad (gen 7)'] } },
+    { name: 'mobile', grepInvert: optedOut('mobile'), use: { ...devices['iPhone 13'] } },
   ],
 
   webServer: isRemote ? undefined : {

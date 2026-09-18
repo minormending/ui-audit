@@ -98,6 +98,15 @@ export const cases = selected.flatMap(t =>
     // a dismissed banner, a saved preference -- which no click can reach and
     // no permission grants.
     storage: p.storage ?? t.storage ?? null,
+    // Viewports this state is worth auditing at, defaulting to all of them.
+    //
+    // For states that are slow and not viewport-interesting. story-tale-reader's
+    // resume states read a book, leave it and reopen it — a dozen real clicks each
+    // — and they depend on the book having been *stored*, so on a machine whose
+    // disk is busy they fail for a reason that has nothing to do with the UI. The
+    // behaviour they protect is the same at every width, so one viewport proves it
+    // and three only buy flakiness.
+    viewports: p.viewports ?? t.viewports ?? null,
     // Selectors to click, in order, once the page has loaded -- how a state
     // that has no URL of its own gets audited. Several of these apps put most
     // of themselves behind a press: a card that swaps, a settings sheet, a
