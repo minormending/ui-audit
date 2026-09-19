@@ -806,7 +806,7 @@
               "timeout": 40000
             },
             {
-              "fill": ".shelf-search input",
+              "fill": ".shelf-search",
               "text": "rtl"
             },
             {
@@ -819,7 +819,7 @@
               "timeout": 15000
             },
             {
-              "fill": ".shelf-search input",
+              "fill": ".shelf-search",
               "text": ""
             },
             {
