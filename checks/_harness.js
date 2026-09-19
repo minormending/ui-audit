@@ -492,8 +492,20 @@ export async function pressOpenSteps(page, open = [], dir = '.') {
       if (await el.count() && await el.isVisible()) await el.click({ timeout: 5_000 });
       continue;
     }
+    // { upload, file } or { upload, files } puts real files into a file input.
+    // `files` matters for anything whose behaviour only appears in bulk: a shelf
+    // with one book on it cannot demonstrate searching or sorting, and adding books
+    // one state at a time would photograph a different app each time.
     if (step.upload) {
-      await page.setInputFiles(step.upload, resolve(root, dir, step.file));
+      const chosen = step.files ?? [step.file];
+      await page.setInputFiles(step.upload, chosen.map((name) => resolve(root, dir, name)));
+      continue;
+    }
+    // { select, value } picks an option. A select cannot be driven by pressing or
+    // typing at it, so a state behind one -- an ordering, a mode, a filter -- is
+    // otherwise unreachable.
+    if (step.select) {
+      await page.selectOption(step.select, step.value);
       continue;
     }
     // { press } sends a key to the page. A few states exist only for someone on

@@ -786,6 +786,58 @@
         },
         {
           "path": "/",
+          "name": "shelf-search",
+          "viewports": [
+            "desktop"
+          ],
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "files": [
+                "../corpus/fixtures/fxl-explicit-spreads.epub",
+                "../corpus/fixtures/fxl-no-page-list.epub",
+                "../corpus/fixtures/fxl-rtl.epub",
+                "../corpus/fixtures/narrated-spreads.epub",
+                "../corpus/fixtures/reflowable-chapters.epub"
+              ]
+            },
+            {
+              "waitFor": ".shelf-controls",
+              "timeout": 40000
+            },
+            {
+              "fill": ".shelf-search input",
+              "text": "rtl"
+            },
+            {
+              "waitFor": ".shelf-title:has-text(\"fxl-rtl\")",
+              "timeout": 15000
+            },
+            {
+              "waitFor": ".shelf-title:has-text(\"Reflowable Chapters\")",
+              "state": "detached",
+              "timeout": 15000
+            },
+            {
+              "fill": ".shelf-search input",
+              "text": ""
+            },
+            {
+              "waitFor": ".shelf-title:has-text(\"Reflowable Chapters\")",
+              "timeout": 15000
+            },
+            {
+              "select": ".shelf-sort select",
+              "value": "title"
+            },
+            {
+              "waitFor": ".shelf-item:first-child .shelf-title:has-text(\"fxl-explicit-spreads\")",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "reading",
           "open": [
             ".sample .primary",
