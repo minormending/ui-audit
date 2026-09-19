@@ -131,7 +131,7 @@ export const githubUser = config.githubUser;
  * was opened from. Handing over the case makes that impossible to get wrong.
  */
 export async function visit(page, c) {
-  const { url, waitFor = null, open = [], geolocation = null, storage = null } = c;
+  const { url, waitFor = null, open = [] } = c;
   // `c.dir` is the target's directory -- see the { upload } step below.
   const consoleErrors = [];
   const failedRequests = [];
@@ -178,28 +178,7 @@ export async function visit(page, c) {
     };
   });
 
-  // Before navigation, both of them: a page that asks on load gets the answer
-  // it would have got from a person standing there, and granting the
-  // permission without setting a position hands it a pending request that
-  // never resolves.
-  if (geolocation) {
-    await page.context().grantPermissions(['geolocation']);
-    await page.context().setGeolocation(geolocation);
-  }
-
-  // Before the page's own scripts, so a client that reads its session on
-  // construction sees one. Values that are not already strings are stringified,
-  // which is how they are written in targets.json -- nested JSON rather than a
-  // quoted blob nobody can read or edit.
-  if (storage) {
-    await page.addInitScript((items) => {
-      try {
-        for (const [key, value] of Object.entries(items)) {
-          localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-        }
-      } catch { /* private mode; the case will fail on its own terms */ }
-    }, storage);
-  }
+  await primeContext(page, c);
 
   await page.goto(url, { waitUntil: 'load' });
   if (waitFor) {
@@ -241,59 +220,7 @@ export async function visit(page, c) {
   // state was never reached -- and every assertion after it would then be made
   // against the wrong screen and pass, which is worse than a red test. Failing
   // here names the selector; failing later names nothing.
-  for (const step of open) {
-    if (typeof step === 'string') {
-      await page.locator(step).first().click({ timeout: 5_000 });
-      continue;
-    }
-    // { upload, file } puts a real file into a file input, `file` relative to
-    // the target's own directory. The alternative for an app whose whole
-    // interesting half is behind a file picker is to audit the picker.
-    // { click, optional } presses something that only exists in some layouts.
-    // Narrow it deliberately: the loud failure above is right for a step that
-    // *reaches* a state, because everything after a missed click is asserted
-    // against the wrong screen and passes. This is for a control the layout
-    // itself removes -- crystal-pilot hides its Play key on the two wide
-    // layouts, where the pad has a place of its own and nothing needs swapping
-    // away to reach it, so the key is absent by design rather than by fault.
-    if (step.click) {
-      const el = page.locator(step.click).first();
-      if (!step.optional) { await el.click({ timeout: 5_000 }); continue; }
-      if (await el.count() && await el.isVisible()) await el.click({ timeout: 5_000 });
-      continue;
-    }
-    if (step.upload) {
-      await page.setInputFiles(step.upload, resolve(root, c.dir, step.file));
-      continue;
-    }
-    // { press } sends a key to the page. A few states exist only for someone on
-    // a keyboard and cannot be reached by pressing things: story-tale-reader
-    // retires its toolbars three seconds after a press but holds them open for
-    // keyboard focus, so arriving at its locked state on the keyboard is the
-    // only way to photograph that state with its toolbar still on screen.
-    if (step.press) {
-      await page.keyboard.press(step.press);
-      continue;
-    }
-    // { waitFor, timeout } holds until something the *app* does appears --
-    // which a click cannot express. Loading a 2MB ROM and parsing a symbol
-    // file takes seconds, and every step after it would otherwise race the
-    // boot and be asserted against a page that is still empty.
-    if (step.waitFor) {
-      // `state` for the cases where the assertion is that something went away.
-      // story-tale-reader drops its read-along control when the narration ends,
-      // and "the control is gone" is the only evidence that reading stopped
-      // cleanly rather than hanging on a page with nothing left to play.
-      await page.waitForSelector(step.waitFor,
-                                 { state: step.state ?? 'visible', timeout: step.timeout ?? 60_000 });
-      continue;
-    }
-    // { fill, text } types into a field. A state behind a search box is not
-    // reachable by pressing things -- restroom-map's add-a-place flow puts the
-    // screen its testers complained about behind an address the person types,
-    // and clicking alone only ever reaches the empty form.
-    await page.locator(step.fill).first().fill(step.text, { timeout: 5_000 });
-  }
+  await pressOpenSteps(page, open, c.dir);
   // Again, because what a press reveals has its own fonts, images and reflow --
   // and first wait for it to stop changing at all. What a press opens is often
   // built in stages, and `freezeMotion` then cancels the pending timers, so the
@@ -500,4 +427,101 @@ export async function freezeMotion(page) {
     }
   });
   await page.evaluate(() => new Promise(r => requestAnimationFrame(r)));
+}
+
+/**
+ * Grant a position and seed storage, before anything the page runs.
+ *
+ * Extracted so `scripts/capture.js` applies them the same way this does. It
+ * did not, for a long time, and the failure was quiet in the worst way: a
+ * target whose states are gated on a session or a location was photographed
+ * at whatever screen it falls back to, and the review that read those pictures
+ * reported on the fallback without anyone noticing it was the fallback.
+ */
+export async function primeContext(page, { geolocation = null, storage = null } = {}) {
+  // Before navigation, both of them: a page that asks on load gets the answer
+  // it would have got from a person standing there, and granting the
+  // permission without setting a position hands it a pending request that
+  // never resolves.
+  if (geolocation) {
+    await page.context().grantPermissions(['geolocation']);
+    await page.context().setGeolocation(geolocation);
+  }
+
+  // Before the page's own scripts, so a client that reads its session on
+  // construction sees one. Values that are not already strings are stringified,
+  // which is how they are written in targets.json -- nested JSON rather than a
+  // quoted blob nobody can read or edit.
+  if (storage) {
+    await page.addInitScript((items) => {
+      try {
+        for (const [key, value] of Object.entries(items)) {
+          localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        }
+      } catch { /* private mode; the case will fail on its own terms */ }
+    }, storage);
+  }
+}
+
+/**
+ * Press the `open` chain that reaches a state with no URL of its own.
+ *
+ * Shared with `scripts/capture.js` for the same reason `primeContext` is: two
+ * copies of this would drift, and the half that drifted would still produce
+ * pictures — of the wrong screen.
+ */
+export async function pressOpenSteps(page, open = [], dir = '.') {
+  for (const step of open) {
+    if (typeof step === 'string') {
+      await page.locator(step).first().click({ timeout: 5_000 });
+      continue;
+    }
+    // { upload, file } puts a real file into a file input, `file` relative to
+    // the target's own directory. The alternative for an app whose whole
+    // interesting half is behind a file picker is to audit the picker.
+    // { click, optional } presses something that only exists in some layouts.
+    // Narrow it deliberately: the loud failure above is right for a step that
+    // *reaches* a state, because everything after a missed click is asserted
+    // against the wrong screen and passes. This is for a control the layout
+    // itself removes -- crystal-pilot hides its Play key on the two wide
+    // layouts, where the pad has a place of its own and nothing needs swapping
+    // away to reach it, so the key is absent by design rather than by fault.
+    if (step.click) {
+      const el = page.locator(step.click).first();
+      if (!step.optional) { await el.click({ timeout: 5_000 }); continue; }
+      if (await el.count() && await el.isVisible()) await el.click({ timeout: 5_000 });
+      continue;
+    }
+    if (step.upload) {
+      await page.setInputFiles(step.upload, resolve(root, dir, step.file));
+      continue;
+    }
+    // { press } sends a key to the page. A few states exist only for someone on
+    // a keyboard and cannot be reached by pressing things: story-tale-reader
+    // retires its toolbars three seconds after a press but holds them open for
+    // keyboard focus, so arriving at its locked state on the keyboard is the
+    // only way to photograph that state with its toolbar still on screen.
+    if (step.press) {
+      await page.keyboard.press(step.press);
+      continue;
+    }
+    // { waitFor, timeout } holds until something the *app* does appears --
+    // which a click cannot express. Loading a 2MB ROM and parsing a symbol
+    // file takes seconds, and every step after it would otherwise race the
+    // boot and be asserted against a page that is still empty.
+    if (step.waitFor) {
+      // `state` for the cases where the assertion is that something went away.
+      // story-tale-reader drops its read-along control when the narration ends,
+      // and "the control is gone" is the only evidence that reading stopped
+      // cleanly rather than hanging on a page with nothing left to play.
+      await page.waitForSelector(step.waitFor,
+                                 { state: step.state ?? 'visible', timeout: step.timeout ?? 60_000 });
+      continue;
+    }
+    // { fill, text } types into a field. A state behind a search box is not
+    // reachable by pressing things -- restroom-map's add-a-place flow puts the
+    // screen its testers complained about behind an address the person types,
+    // and clicking alone only ever reaches the empty form.
+    await page.locator(step.fill).first().fill(step.text, { timeout: 5_000 });
+  }
 }
