@@ -1,10 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
 import { resolveTargets } from './scripts/targets.js';
+import { assertFresh } from './scripts/build-stamp.js';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // The readiness probe has to hit a path this run actually mounts — with
 // AUDIT_DIR the registry targets aren't served at all.
 const targets = await resolveTargets();
 const firstTarget = targets[0]?.name ?? 'grumpy-bunny';
+
+// Before anything is served: the dist/ behind each built target has to have
+// been made from the source in its checkout now. A target is a separate
+// repository and can move after the build, and when it does every check here
+// describes an app that is not there. Throwing from the config stops the run
+// before a single browser opens.
+assertFresh(targets, resolve(fileURLToPath(import.meta.url), '..'), { label: 'audit' });
 
 /*
  * Cases a project must not collect, from each page's `viewports`.

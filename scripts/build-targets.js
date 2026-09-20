@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeStamp } from './build-stamp.js';
 
 const root = resolve(fileURLToPath(import.meta.url), '../..');
 const { targets } = JSON.parse(await readFile(join(root, 'targets.json'), 'utf8'));
@@ -35,6 +36,10 @@ for (const t of buildable) {
       execSync(t.install ?? 'npm install --no-audit --no-fund', { cwd, stdio: 'inherit' });
     }
     execSync(t.build, { cwd, stdio: 'inherit' });
+    // What this dist was made from, so anything reading it later can tell
+    // whether the checkout has moved on since. See build-stamp.js.
+    const stamp = writeStamp(t, root);
+    if (stamp) console.log(`    built from ${stamp.commit.slice(0, 8)}${stamp.dirty ? ' (dirty tree)' : ''}`);
   } catch {
     console.error(`!!! ${t.name} failed to build`);
     failed++;

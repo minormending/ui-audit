@@ -25,9 +25,14 @@ import { chromium, devices } from 'playwright';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { cases, installFixtures, primeContext, pressOpenSteps } from '../checks/_harness.js';
-import { root } from './targets.js';
+import { root, resolveTargets } from './targets.js';
+import { assertFresh } from './build-stamp.js';
 
 const ORIGIN = 'http://localhost:4173';
+
+// Pictures of a stale build are worse than no pictures: a review reads them
+// as the app. Same check the suite makes, for the same reason.
+assertFresh(await resolveTargets(), root, { label: 'captur' });
 
 // Positional names narrow further than AUDIT_ONLY already has, so
 // `node scripts/capture.js tidy-up` keeps working.
