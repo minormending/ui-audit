@@ -35,6 +35,24 @@ const optedOut = (project) => {
   return ids.length ? new RegExp(ids.join('|')) : undefined;
 };
 
+/**
+ * The inverse, for a project nothing should run in unless it asks.
+ *
+ * `touch` exists for a handful of gesture states and would otherwise re-run all
+ * thirty-odd pages of every target in a fourth browser, for no new information.
+ */
+const optIn = (project) => {
+  const ids = targets
+    .flatMap((t) => (t.pages ?? []).map((p) => ({
+      id: `${t.name}/${p.name}`,
+      viewports: p.viewports ?? t.viewports ?? null,
+    })))
+    .filter((c) => c.viewports && c.viewports.includes(project))
+    .map((c) => c.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // Nothing opted in: match nothing rather than everything.
+  return new RegExp(ids.length ? ids.join('|') : '(?!)');
+};
+
 // AUDIT_URL lets the same suite run against a deployed Pages site instead of
 // the local mounts, e.g. AUDIT_URL=https://minormending.github.io
 const baseURL = process.env.AUDIT_URL ?? 'http://localhost:4173';
@@ -103,6 +121,18 @@ export default defineConfig({
     },
     { name: 'tablet', grepInvert: optedOut('tablet'), use: { ...devices['iPad (gen 7)'] } },
     { name: 'mobile', grepInvert: optedOut('mobile'), use: { ...devices['iPhone 13'] } },
+    /*
+     * Chromium with fingers.
+     *
+     * `tablet` and `mobile` are the iPad and iPhone presets, which run WebKit — so
+     * between them and desktop Chromium the suite had no Chromium-with-touch
+     * anywhere, which is exactly what an Android tablet is, and what most of these
+     * apps are actually used on. It also has CDP, without which two simultaneous
+     * contacts cannot be dispatched at all.
+     *
+     * Opt-in only, so it costs the states that ask for it and nothing else.
+     */
+    { name: 'touch', grep: optIn('touch'), use: { ...devices['Galaxy Tab S4'] } },
   ],
 
   webServer: isRemote ? undefined : {

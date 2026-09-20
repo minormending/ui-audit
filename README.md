@@ -76,6 +76,22 @@ An `open` step may also be an object rather than a selector:
 ]
 ```
 
+The `touch` project is Chromium with fingers, and it is **opt-in**: a state reaches
+it by naming it in `viewports`, and nothing else runs there. It exists because
+`tablet` and `mobile` are the iPad and iPhone presets, which run **WebKit** — so
+without it the suite had no Chromium-with-touch anywhere, which is precisely what an
+Android tablet is. It is also the only project with CDP, and therefore the only one
+that can pinch.
+
+`tap` puts a finger on something instead of a mouse pointer, and `pinch` spreads or
+closes two of them over it (`scale` above 1 zooms in, below 1 out). Both need a
+project with touch — `tablet` and `mobile` have it, `desktop` does not — so states
+using them are scoped with `viewports`. A tap is not a small click: it captures the
+pointer to its original target and arrives with `pointerType: "touch"`, which is a
+different path through most gesture code. Two simultaneous contacts exist only over
+CDP, so `pinch` drops to the protocol; short of a hand on real glass it is the only
+way to test the gesture at all.
+
 `upload` takes `files` instead of `file` to put several in at once. Some behaviour
 only exists in bulk: a shelf with one book on it cannot demonstrate searching or
 sorting, and adding books a state at a time would photograph a different app each
@@ -211,6 +227,16 @@ A flaky visual suite gets ignored, so the harness pins everything that varies:
   the press happens after motion is zeroed, then a bounded `networkidle`, then a
   quiet window with no DOM mutations. Each of the three was a measured flake, not
   a precaution — see the commit that added them.
+
+- **Never rely on a gesture to bring hidden UI back.** story-tale-reader's toolbars
+  are restored by a tap in the middle of the page, which works where two pages face
+  each other — the tap lands on the stage between them — and does not where a single
+  page fills the frame, because the tap lands inside the book's own iframe. The
+  symptom is not a failed tap but a later failed click: a hidden bar is translated
+  clear of the viewport, so Playwright reports the button as *visible, enabled and
+  stable* and then *outside of the viewport*, which scrolling cannot fix. A state
+  that needs a toolbar should act while it is still up, as `fix-layout` and
+  `contents` both now do.
 
 - A target that hides its own UI on a timer has to be waited for *by that state*,
   not by the clock. story-tale-reader drops its toolbars three seconds after the
