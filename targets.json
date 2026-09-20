@@ -917,7 +917,8 @@
             {
               "waitFor": ".chrome-top:not(.hidden)"
             }
-          ]
+          ],
+          "holdAfterOpen": true
         },
         {
           "path": "/",
