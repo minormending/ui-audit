@@ -921,6 +921,59 @@
         },
         {
           "path": "/",
+          "name": "pinch-zoom",
+          "viewports": [
+            "tablet",
+            "mobile"
+          ],
+          "open": [
+            ".sample .primary",
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            {
+              "pinch": ".spread",
+              "scale": 2.5
+            },
+            {
+              "waitFor": ".zoom-layer[style*=\"scale\"]",
+              "timeout": 15000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "name": "lock-touch",
+          "viewports": [
+            "tablet",
+            "mobile"
+          ],
+          "open": [
+            ".sample .primary",
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            {
+              "tap": ".lock"
+            },
+            {
+              "waitFor": ".lock-on",
+              "timeout": 15000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "reflowable",
           "open": [
             {
