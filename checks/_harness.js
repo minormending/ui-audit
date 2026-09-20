@@ -345,6 +345,49 @@ export async function installFixtures(page, fixtures) {
  * mutating (a clock, a ticker) is a page this cannot help, and the visual check
  * already has `mask` and `hide` for that.
  */
+/** Where a finger should land: the middle of the element. */
+async function centreOf(page, selector) {
+  const box = await page.locator(selector).first().boundingBox();
+  if (!box) throw new Error(`cannot tap ${selector}: it has no box on screen`);
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+/**
+ * A two-finger pinch, dispatched over the DevTools protocol.
+ *
+ * Both contacts have to move together in the same event, which is exactly what no
+ * high-level API offers: `touchscreen.tap` is one finger, and a mouse has none. A
+ * scale above 1 spreads the fingers apart (zoom in), below 1 brings them together.
+ *
+ * The moves are stepped rather than jumped, because a gesture recogniser watching
+ * for a change in distance sees nothing in a single leap from start to finish.
+ */
+async function pinch(page, selector, scale, steps) {
+  const { x, y } = await centreOf(page, selector);
+  const client = await page.context().newCDPSession(page);
+  const from = 40;
+  const to = Math.max(8, from * scale);
+
+  const contacts = (spread) => [
+    { x: x - spread, y, id: 1 },
+    { x: x + spread, y, id: 2 },
+  ];
+
+  try {
+    await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: contacts(from) });
+    for (let i = 1; i <= steps; i++) {
+      const spread = from + ((to - from) * i) / steps;
+      await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: contacts(spread) });
+      // A frame between moves: the app tracks the gesture across animation frames,
+      // and events delivered faster than it can draw are events it cannot follow.
+      await page.waitForTimeout(16);
+    }
+    await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  } finally {
+    await client.detach().catch(() => {});
+  }
+}
+
 export async function quiesce(page, quietMs = 150, capMs = 2500) {
   await page.evaluate(async ({ quietMs, capMs }) => {
     await new Promise((resolve) => {
@@ -508,6 +551,24 @@ export async function pressOpenSteps(page, open = [], dir = '.') {
       await page.selectOption(step.select, step.value);
       continue;
     }
+    // { tap } is a finger, not a mouse. Everything else here clicks, and a click is
+    // not what these apps are used with: a tap captures the pointer to its original
+    // target, arrives with pointerType "touch", and reaches handlers a click never
+    // does. Only meaningful in a project with touch — see `touch` in the README.
+    if (step.tap) {
+      const spot = await centreOf(page, step.tap);
+      await page.touchscreen.tap(spot.x, spot.y);
+      continue;
+    }
+
+    // { pinch, scale } spreads or closes two fingers over an element. Playwright has
+    // no pinch: two simultaneous contacts only exist over CDP, which is also the
+    // only way to test the gesture at all short of a real hand on real glass.
+    if (step.pinch) {
+      await pinch(page, step.pinch, step.scale ?? 2, step.steps ?? 8);
+      continue;
+    }
+
     // { press } sends a key to the page. A few states exist only for someone on
     // a keyboard and cannot be reached by pressing things: story-tale-reader
     // retires its toolbars three seconds after a press but holds them open for

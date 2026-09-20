@@ -76,6 +76,22 @@ An `open` step may also be an object rather than a selector:
 ]
 ```
 
+The `touch` project is Chromium with fingers, and it is **opt-in**: a state reaches
+it by naming it in `viewports`, and nothing else runs there. It exists because
+`tablet` and `mobile` are the iPad and iPhone presets, which run **WebKit** — so
+without it the suite had no Chromium-with-touch anywhere, which is precisely what an
+Android tablet is. It is also the only project with CDP, and therefore the only one
+that can pinch.
+
+`tap` puts a finger on something instead of a mouse pointer, and `pinch` spreads or
+closes two of them over it (`scale` above 1 zooms in, below 1 out). Both need a
+project with touch — `tablet` and `mobile` have it, `desktop` does not — so states
+using them are scoped with `viewports`. A tap is not a small click: it captures the
+pointer to its original target and arrives with `pointerType: "touch"`, which is a
+different path through most gesture code. Two simultaneous contacts exist only over
+CDP, so `pinch` drops to the protocol; short of a hand on real glass it is the only
+way to test the gesture at all.
+
 `upload` takes `files` instead of `file` to put several in at once. Some behaviour
 only exists in bulk: a shelf with one book on it cannot demonstrate searching or
 sorting, and adding books a state at a time would photograph a different app each
