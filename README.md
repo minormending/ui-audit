@@ -212,6 +212,16 @@ A flaky visual suite gets ignored, so the harness pins everything that varies:
   quiet window with no DOM mutations. Each of the three was a measured flake, not
   a precaution — see the commit that added them.
 
+- **Never rely on a gesture to bring hidden UI back.** story-tale-reader's toolbars
+  are restored by a tap in the middle of the page, which works where two pages face
+  each other — the tap lands on the stage between them — and does not where a single
+  page fills the frame, because the tap lands inside the book's own iframe. The
+  symptom is not a failed tap but a later failed click: a hidden bar is translated
+  clear of the viewport, so Playwright reports the button as *visible, enabled and
+  stable* and then *outside of the viewport*, which scrolling cannot fix. A state
+  that needs a toolbar should act while it is still up, as `fix-layout` and
+  `contents` both now do.
+
 - A target that hides its own UI on a timer has to be waited for *by that state*,
   not by the clock. story-tale-reader drops its toolbars three seconds after the
   last interaction, and the harness's three waits take anywhere from well under

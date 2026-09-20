@@ -888,11 +888,6 @@
               "state": "detached",
               "timeout": 15000
             },
-            {
-              "waitFor": ".chrome-top.hidden",
-              "timeout": 15000
-            },
-            ".spread",
             "button[aria-expanded]",
             {
               "waitFor": ".menu"
@@ -901,9 +896,6 @@
               "waitFor": ".contents-jump.contents-here:has-text('Begin Reading')",
               "timeout": 15000
             }
-          ],
-          "viewports": [
-            "desktop"
           ]
         },
         {
