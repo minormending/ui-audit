@@ -6,7 +6,7 @@ import { cases, visit, freezeMotion, hideRegions, installFixtures } from './_har
 for (const c of cases) {
   test(`visual: ${c.id}`, async ({ page }) => {
     await installFixtures(page, c.fixtures);
-    await visit(page, c);
+    await visit(page, c, { hold: c.holdAfterOpen && c.freezeTimers });
     await hideRegions(page, c.hide);
     if (c.freezeTimers) await freezeMotion(page);
     // Playwright already suffixes the project and platform onto the filename.

@@ -107,6 +107,29 @@ export const cases = selected.flatMap(t =>
     // behaviour they protect is the same at every width, so one viewport proves it
     // and three only buy flakiness.
     viewports: p.viewports ?? t.viewports ?? null,
+    // Freeze timers the instant the `open` chain finishes, before the settling
+    // that follows it — for a state that only stays put while something the
+    // harness cannot promise remains true.
+    //
+    // story-tale-reader's `locked` is the case. It presses Tab so that keyboard
+    // focus pins the toolbar open, and asserts `.chrome-top:not(.hidden)`. The
+    // assertion passes. Then the page loses focus — which a headless browser on
+    // a runner with no window manager simply does, and a laptop with a real one
+    // does not — the three-second retire resumes, and the shot is taken of a
+    // screen with no chrome on it. Measured: blur, wait six seconds, and the
+    // class goes from "chrome chrome-top" to "chrome chrome-top hidden". CPU
+    // throttling and a ten-second wait both leave it alone, so it is focus and
+    // not speed.
+    //
+    // Two machines therefore disagreed permanently rather than flakily, each
+    // self-consistent, which is the worst shape for a baseline: whoever
+    // regenerated last was right until the other one ran.
+    //
+    // Opt-in per state, because freezing this early costs something. What a
+    // press reveals is often built in stages, and the settling below exists to
+    // let that finish; freeze first and a staged screen is photographed
+    // half-built. Only a state that cannot hold still should pay that.
+    holdAfterOpen: p.holdAfterOpen ?? t.holdAfterOpen ?? false,
     // Selectors to click, in order, once the page has loaded -- how a state
     // that has no URL of its own gets audited. Several of these apps put most
     // of themselves behind a press: a card that swaps, a settings sheet, a
@@ -130,7 +153,7 @@ export const githubUser = config.githubUser;
  * end up auditing the opened state and the fourth quietly auditing the page it
  * was opened from. Handing over the case makes that impossible to get wrong.
  */
-export async function visit(page, c) {
+export async function visit(page, c, { hold = false } = {}) {
   const { url, waitFor = null, open = [] } = c;
   // `c.dir` is the target's directory -- see the { upload } step below.
   const consoleErrors = [];
@@ -221,6 +244,11 @@ export async function visit(page, c) {
   // against the wrong screen and pass, which is worse than a red test. Failing
   // here names the selector; failing later names nothing.
   await pressOpenSteps(page, open, c.dir);
+
+  // Before the settling, not after it: see `holdAfterOpen` above. The caller
+  // decides, because this cancels timers and axe-core drives its rule queue
+  // through them — only the visual check can afford it.
+  if (hold) await freezeMotion(page);
   // Again, because what a press reveals has its own fonts, images and reflow --
   // and first wait for it to stop changing at all. What a press opens is often
   // built in stages, and `freezeMotion` then cancels the pending timers, so the
@@ -390,17 +418,20 @@ async function pinch(page, selector, scale, steps) {
 
 export async function quiesce(page, quietMs = 150, capMs = 2500) {
   await page.evaluate(async ({ quietMs, capMs }) => {
+    // The real setTimeout when freezeMotion has already stubbed the global one.
+    // Waiting for quiet with a timer that never fires is a ninety-second hang.
+    const wait = window.__auditSetTimeout ?? window.setTimeout.bind(window);
     await new Promise((resolve) => {
       let timer = 0;
       const done = () => { clearTimeout(timer); obs.disconnect(); resolve(); };
       const obs = new MutationObserver(() => {
         clearTimeout(timer);
-        timer = setTimeout(done, quietMs);
+        timer = wait(done, quietMs);
       });
       obs.observe(document.documentElement,
                   { childList: true, subtree: true, attributes: true, characterData: true });
-      timer = setTimeout(done, quietMs);
-      setTimeout(done, capMs);
+      timer = wait(done, quietMs);
+      wait(done, capMs);
     });
   }, { quietMs, capMs });
 }
@@ -455,6 +486,13 @@ export async function freezeMotion(page) {
     }
     // Callbacks already mid-flight reschedule themselves, so new timers have to
     // be refused too — not just the pending ones cancelled.
+    //
+    // Keep the real one reachable first. `quiesce` runs *in the page* and waits
+    // on setTimeout, so once this stub is installed it can never resolve — it
+    // hangs until the test deadline, ninety seconds later, and reports itself
+    // as a screenshot mismatch. That is only reachable when something freezes
+    // before the settling rather than after it, which `holdAfterOpen` now does.
+    window.__auditSetTimeout ??= window.setTimeout.bind(window);
     window.setTimeout = () => 0;
     window.setInterval = () => 0;
 
