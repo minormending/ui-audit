@@ -923,8 +923,7 @@
           "path": "/",
           "name": "pinch-zoom",
           "viewports": [
-            "tablet",
-            "mobile"
+            "touch"
           ],
           "open": [
             ".sample .primary",
@@ -950,6 +949,7 @@
           "path": "/",
           "name": "lock-touch",
           "viewports": [
+            "touch",
             "tablet",
             "mobile"
           ],
