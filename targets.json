@@ -993,6 +993,32 @@
         },
         {
           "path": "/",
+          "name": "letter-spacing",
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/reflowable-chapters.epub"
+            },
+            {
+              "waitFor": ".reflow-frame",
+              "timeout": 40000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu"
+            },
+            {
+              "waitFor": ".chip:has-text('Widest')"
+            },
+            ".chip:has-text('Widest')",
+            {
+              "waitFor": ".chip.chip-on:has-text('Widest')",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "pdf",
           "open": [
             {
@@ -1029,6 +1055,36 @@
         },
         {
           "path": "/",
+          "name": "read-along-controls",
+          "viewports": [
+            "desktop"
+          ],
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/narrated-spreads.epub"
+            },
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            {
+              "waitFor": ".play"
+            },
+            {
+              "waitFor": ".replay"
+            },
+            {
+              "press": "Tab"
+            },
+            {
+              "waitFor": ".chrome-bottom:not(.hidden)",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "read-along",
           "viewports": [
             "desktop"
@@ -1057,6 +1113,11 @@
             },
             {
               "waitFor": ".play.play-on"
+            },
+            ".replay",
+            {
+              "waitFor": ".play.play-on",
+              "timeout": 15000
             },
             {
               "waitFor": ".chrome-centre span:has-text('4 / 4')",
