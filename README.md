@@ -76,6 +76,12 @@ An `open` step may also be an object rather than a selector:
 ]
 ```
 
+The `tablet` project runs with **`colorScheme: 'dark'`**. Playwright defaults every
+context to light, so a target that follows `prefers-color-scheme` would have half of
+itself never rendered — and a contrast fault in the unrendered half ships unseen.
+Attaching dark to an existing viewport rather than adding a fourth pass keeps the run
+the same length; it does mean tablet baselines are the dark ones.
+
 The `touch` project is Chromium with fingers, and it is **opt-in**: a state reaches
 it by naming it in `viewports`, and nothing else runs there. It exists because
 `tablet` and `mobile` are the iPad and iPhone presets, which run **WebKit** — so

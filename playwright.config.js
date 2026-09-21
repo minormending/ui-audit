@@ -119,7 +119,20 @@ export default defineConfig({
       grepInvert: optedOut('desktop'),
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
-    { name: 'tablet', grepInvert: optedOut('tablet'), use: { ...devices['iPad (gen 7)'] } },
+    /*
+     * Tablet also carries the dark scheme, so both are audited.
+     *
+     * Playwright defaults every context to light, and a target that follows
+     * `prefers-color-scheme` would otherwise have half of itself never rendered --
+     * story-tale-reader has a light library and a dark one, and a contrast fault in
+     * the unrendered half would ship unseen. Attaching it to a viewport rather than
+     * adding a fourth pass keeps the run the same length.
+     */
+    {
+      name: 'tablet',
+      grepInvert: optedOut('tablet'),
+      use: { ...devices['iPad (gen 7)'], colorScheme: 'dark' },
+    },
     { name: 'mobile', grepInvert: optedOut('mobile'), use: { ...devices['iPhone 13'] } },
     /*
      * Chromium with fingers.
