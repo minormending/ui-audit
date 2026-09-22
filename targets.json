@@ -1136,6 +1136,90 @@
         },
         {
           "path": "/",
+          "name": "reading-modes",
+          "viewports": [
+            "desktop"
+          ],
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/narrated-spreads.epub"
+            },
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu"
+            },
+            {
+              "waitFor": ".mode[aria-pressed='true']:has-text('Read to me')",
+              "timeout": 15000
+            },
+            ".mode:has-text('Read together')",
+            {
+              "waitFor": ".mode[aria-pressed='true']:has-text('Read together')",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "name": "read-together",
+          "viewports": [
+            "desktop"
+          ],
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/narrated-spreads.epub"
+            },
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu"
+            },
+            ".mode:has-text('Read together')",
+            {
+              "waitFor": ".mode[aria-pressed='true']:has-text('Read together')",
+              "timeout": 15000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu",
+              "state": "detached",
+              "timeout": 15000
+            },
+            {
+              "waitFor": ".chrome-top.hidden",
+              "timeout": 15000
+            },
+            ".spread",
+            "button[aria-label='Play read-along']",
+            {
+              "waitFor": ".play.play-on",
+              "timeout": 15000
+            },
+            {
+              "waitFor": ".chrome-bottom:not(.hidden)",
+              "timeout": 30000
+            },
+            {
+              "waitFor": ".chrome-centre span:has-text('1 / 4')",
+              "timeout": 15000
+            },
+            {
+              "waitFor": ".chrome-bottom:not(.hidden)",
+              "timeout": 8000
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "resume-fixed",
           "open": [
             ".sample .primary",
