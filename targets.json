@@ -1220,6 +1220,35 @@
         },
         {
           "path": "/",
+          "name": "about-this-book",
+          "viewports": [
+            "desktop"
+          ],
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/narrated-spreads.epub"
+            },
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu"
+            },
+            {
+              "waitFor": ".support-yes:has-text('Narrated')",
+              "timeout": 15000
+            },
+            {
+              "waitFor": ".support-no:has-text('marked as decoration')",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "resume-fixed",
           "open": [
             ".sample .primary",
