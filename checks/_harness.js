@@ -567,8 +567,13 @@ export async function pressOpenSteps(page, open = [], dir = '.') {
     // itself removes -- crystal-pilot hides its Play key on the two wide
     // layouts, where the pad has a place of its own and nothing needs swapping
     // away to reach it, so the key is absent by design rather than by fault.
+    // { click, frame } reaches inside an iframe. A plain locator does not pierce
+    // one, and story-tale-reader renders every book page in its own frame -- so
+    // the words a child taps, which is the whole interaction the read-along is
+    // for, are otherwise unreachable from a check.
     if (step.click) {
-      const el = page.locator(step.click).first();
+      const root = step.frame ? page.frameLocator(step.frame) : page;
+      const el = root.locator(step.click).first();
       if (!step.optional) { await el.click({ timeout: 5_000 }); continue; }
       if (await el.count() && await el.isVisible()) await el.click({ timeout: 5_000 });
       continue;
@@ -612,8 +617,11 @@ export async function pressOpenSteps(page, open = [], dir = '.') {
     // retires its toolbars three seconds after a press but holds them open for
     // keyboard focus, so arriving at its locked state on the keyboard is the
     // only way to photograph that state with its toolbar still on screen.
+    // { press, times } sends a key, optionally more than once: paging to the end
+    // of a book is four presses, and four copies of the same step reads worse
+    // than saying so.
     if (step.press) {
-      await page.keyboard.press(step.press);
+      for (let i = 0; i < (step.times ?? 1); i++) await page.keyboard.press(step.press);
       continue;
     }
     // { waitFor, timeout } holds until something the *app* does appears --

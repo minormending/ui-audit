@@ -1279,6 +1279,66 @@
         },
         {
           "path": "/",
+          "name": "word-list",
+          "viewports": [
+            "desktop"
+          ],
+          "open": [
+            {
+              "upload": "input[type=file]",
+              "file": "../corpus/fixtures/narrated-spreads.epub"
+            },
+            {
+              "waitFor": ".spread",
+              "timeout": 40000
+            },
+            {
+              "click": "#w1-3",
+              "frame": ".page-frame"
+            },
+            {
+              "click": "#w1-1",
+              "frame": ".page-frame"
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu"
+            },
+            {
+              "waitFor": ".word-list",
+              "state": "detached",
+              "timeout": 10000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu",
+              "state": "detached",
+              "timeout": 10000
+            },
+            {
+              "press": "ArrowRight",
+              "times": 4
+            },
+            {
+              "waitFor": ".chrome-centre span:has-text('4 / 4')",
+              "timeout": 20000
+            },
+            "button[aria-expanded]",
+            {
+              "waitFor": ".menu"
+            },
+            {
+              "waitFor": ".word-list",
+              "timeout": 15000
+            },
+            {
+              "waitFor": ".word-list li:first-child .word-text:has-text('Once')",
+              "timeout": 15000
+            }
+          ]
+        },
+        {
+          "path": "/",
           "name": "resume-fixed",
           "open": [
             ".sample .primary",
